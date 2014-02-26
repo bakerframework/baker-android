@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Gindpubs/Gindpubs.iml" filepath="$PROJECT_DIR$/Gindpubs/Gindpubs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/GindpubsProject.iml" filepath="$PROJECT_DIR$/GindpubsProject.iml" />
+    </modules>
+  </component>
+</project>
+

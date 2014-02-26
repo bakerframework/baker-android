@@ -1,0 +1,42 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.8.+'
+    }
+}
+
+apply plugin: 'android-library'
+apply plugin: 'maven'
+
+version '1.0'
+group 'com.giniem'
+
+repositories {
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 17
+    buildToolsVersion "19.0.1"
+
+    defaultConfig {
+        minSdkVersion 11
+        targetSdkVersion 17
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            // Due to a bug in gradle 0.4.2 to 0.4.4 we use this way to get the maven local repository path.
+            repository url: 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+        }
+    }
+}
+task install(dependsOn: uploadArchives)
+
+dependencies {
+    compile 'com.google.android.gms:play-services:4.1.32'
+}

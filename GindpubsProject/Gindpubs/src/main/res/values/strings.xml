@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Properties to configure the application's UI and behaviour -->
+
+    <!-- Project Number of the Google API console identifying the notifications sender -->
+    <string name="sender_id">356573692838</string>
+
+    <!-- The application id that will be send to the server when retrieving the shelf -->
+    <string name="app_id">Gindpubs</string>
+    <string name="exit">Exit</string>
+    <string name="closing_app">If you exit now, all downloads will be cancelled, are you sure you want to exit ?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!-- Shelf URL -->
+    <string name="newstand_manifest_url">http://bakerframework.com/demo/shelf.json</string>
+    <string name="purchase_confirmation_url">http://bakerframework.com/demo/shelf.json</string>
+    <string name="purchases_url">http://bakerframework.com/demo/shelf.json</string>
+    <string name="post_apns_token_url">http://bakerframework.com/demo/shelf.json</string>
+    <string name="download_report_url">http://bakerframework.com/demo/shelf.json</string>
+
+    <!-- Referrer strings to use with links to open them in the device's internet browser or in the same view from gindpubs
+        For more information about links: https://github.com/bakerframework/baker/wiki/Managing-links-and-urls
+    -->
+    <string name="url_gindpubs_referrer">gindpubs</string>
+    <string name="url_external_referrer">external</string>
+
+    <!-- Path to store the cache for the thumbnails inside the system's cache directory. -->
+    <string name="thumbnails">thumbnails</string>
+
+    <!-- Path in the device storage where to save the magazine files. -->
+    <string name="magazines">magazines</string>
+
+    <!-- Filename of the cached json file. The file will be updated if the user has internet access. -->
+    <string name="shelf">shelf.json</string>
+
+    <!-- Name of the json that describes the magazine. -->
+    <string name="book">book.json</string>
+
+    <!-- Name of the magazine's index file. -->
+    <string name="index">index.html</string>
+
+    <string name="package_extension">.zip</string>
+
+    <!-- General strings for the UI -->
+    <string name="app_name">Gindpubs</string>
+    <string name="action_settings">Settings</string>
+    <string name="headerUrl">file:///android_asset/header.html</string>
+    <string name="loadingUrl">file:///android_asset/loading.html</string>
+    <string name="backgroundUrl">file:///android_asset/background.html</string>
+    <string name="inputDateFormat">yyyy-MM-dd hh:mm:ss</string>
+    <string name="outputDateFormat">dd MMM yyyy</string>
+    <string name="download">Download</string>
+    <string name="read">Read</string>
+    <string name="archive">Archive</string>
+    <string name="downloading">Starting download</string>
+    <string name="unzipping">Now Unzipping</string>
+    <string name="deleting">Now Deleting</string>
+    <string name="thumbImageDescription">Thumbnail</string>
+    <string name="confirmation">Confirmation</string>
+    <string name="archiveConfirm">Are you sure you want to archive this issue?</string>
+
+
+    <string name="title_activity_video">VideoActivity</string>
+
+    <!-- Hostname to try to reach to test the internet connection on the device, e.g. when downloading the shelf, check if your server is reachable. -->
+    <string name="check_internet_with_host">http://google.com</string>
+    <!-- The time in milliseconds before considering the host is unreachable and no internet access. -->
+    <integer name="check_internet_timeout">15000</integer>
+
+</resources>
