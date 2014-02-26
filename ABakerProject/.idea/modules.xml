@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ABaker/ABaker.iml" filepath="$PROJECT_DIR$/ABaker/ABaker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ABakerProject.iml" filepath="$PROJECT_DIR$/ABakerProject.iml" />
+    </modules>
+  </component>
+</project>
+

@@ -1,0 +1,9 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="notice" value="/**&#10; * Copyright (c) 2013-&amp;#36;today.year.&#10; *&#10; * Redistribution and use in source and binary forms, with or without modification, are&#10; * permitted provided that the following conditions are met:&#10; *&#10; * 1. Redistributions of source code must retain the above copyright notice, this list of&#10; * conditions and the following disclaimer.&#10; *&#10; * 2. Redistributions in binary form must reproduce the above copyright notice, this list of&#10; * conditions and the following disclaimer in the documentation and/or other materials&#10; * provided with the distribution.&#10; *&#10; * 3. Neither the name of the Baker Framework nor the names of its contributors may be used to&#10; * endorse or promote products derived from this software without specific prior written&#10; * permission.&#10; *&#10; * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND ANY&#10; * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES&#10; * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT&#10; * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,&#10; * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,&#10; * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS&#10; * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT&#10; * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE&#10; * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.&#10; **/" />
+    <option name="keyword" value="Copyright" />
+    <option name="allowReplaceKeyword" value="" />
+    <option name="myName" value="Baker Android" />
+    <option name="myLocal" value="true" />
+  </copyright>
+</component>
