@@ -15,7 +15,10 @@
             android:layout_width="100dp"
             android:layout_height="140dp"
             android:contentDescription="@string/thumbImageDescription"
-            android:scaleType="fitXY" />
+            android:scaleType="fitXY"
+            android:background="#9C9C9C"
+            android:padding="1dp"
+            />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -33,7 +36,7 @@
                 android:text="Title"
 
                 android:fontFamily="sans-serif-light"
-                android:textColor="#F7F6F9"
+                android:textColor="#000000"
                 android:textSize="15sp" />
 
             <TextView
@@ -45,7 +48,7 @@
                 android:text="Info"
 
                 android:fontFamily="sans-serif-light"
-                android:textColor="#DCDBDD"
+                android:textColor="#9C9C9C"
                 android:textSize="13sp" />
 
             <TextView
@@ -57,7 +60,7 @@
                 android:text="Date"
 
                 android:fontFamily="sans-serif-light"
-                android:textColor="#24B2DC"
+                android:textColor="#AF160E"
                 android:textSize="13sp" />
 
             <TextView
@@ -69,7 +72,7 @@
                 android:text="Size"
 
                 android:fontFamily="Helvetica-Bold"
-                android:textColor="#FFFFFF"
+                android:textColor="#AF160E"
                 android:textSize="12sp" />
 
             <Button
@@ -85,7 +88,7 @@
                 android:minWidth="22dp"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:background="#504F50" />
+                android:background="#AF160E" />
 
             <TextView
                 android:id="@+id/txtProgress"
@@ -95,7 +98,7 @@
                 android:text="Progress"
 
                 android:fontFamily="sans-serif-light"
-                android:textColor="#A5A4A6"
+                android:textColor="#AF160E"
                 android:textSize="11sp" />
 
             <LinearLayout
@@ -136,7 +139,7 @@
                     android:minWidth="22dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="10dp"
-                    android:background="#504F50" />
+                    android:background="#AF160E" />
 
                 <Button
                     android:id="@+id/btnArchive"
@@ -146,12 +149,12 @@
                     android:text="@string/archive"
 
                     android:fontFamily="sans-serif-light"
-                    android:textColor="#504F50"
+                    android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:minWidth="22dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="10dp"
-                    android:background="#FFFFFF"/>
+                    android:background="#AF160E"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

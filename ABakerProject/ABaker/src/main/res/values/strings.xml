@@ -4,10 +4,10 @@
     <!-- Properties to configure the application's UI and behaviour -->
 
     <!-- Project Number of the Google API console identifying the notifications sender -->
-    <string name="sender_id">356573692838</string>
+    <string name="sender_id"></string>
 
     <!-- The application id that will be send to the server when retrieving the shelf -->
-    <string name="app_id">Gindpubs</string>
+    <string name="app_id">Baker Android</string>
     <string name="exit">Exit</string>
     <string name="closing_app">If you exit now, all downloads will be cancelled, are you sure you want to exit ?</string>
     <string name="yes">Yes</string>
@@ -23,8 +23,8 @@
     <!-- Referrer strings to use with links to open them in the device's internet browser or in the same view from gindpubs
         For more information about links: https://github.com/bakerframework/baker/wiki/Managing-links-and-urls
     -->
-    <string name="url_gindpubs_referrer">gindpubs</string>
-    <string name="url_external_referrer">external</string>
+    <string name="url_gindpubs_referrer">Baker</string>
+    <string name="url_external_referrer">Safari</string>
 
     <!-- Path to store the cache for the thumbnails inside the system's cache directory. -->
     <string name="thumbnails">thumbnails</string>
@@ -44,7 +44,7 @@
     <string name="package_extension">.zip</string>
 
     <!-- General strings for the UI -->
-    <string name="app_name">Gindpubs</string>
+    <string name="app_name">Baker Android</string>
     <string name="action_settings">Settings</string>
     <string name="headerUrl">file:///android_asset/header.html</string>
     <string name="loadingUrl">file:///android_asset/loading.html</string>
