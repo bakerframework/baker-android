@@ -35,7 +35,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 
 public class FlowLayout extends ViewGroup {
 	private int mHorizontalSpacing;

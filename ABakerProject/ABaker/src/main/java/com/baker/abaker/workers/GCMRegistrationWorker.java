@@ -6,7 +6,7 @@ import android.util.Log;
 
 import com.baker.abaker.client.GindMandator;
 import com.baker.abaker.GindActivity;
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.apache.http.HttpResponse;

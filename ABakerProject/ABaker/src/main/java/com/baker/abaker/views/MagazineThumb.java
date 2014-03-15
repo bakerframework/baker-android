@@ -49,7 +49,7 @@ import com.baker.abaker.client.GindMandator;
 import com.baker.abaker.workers.BookJsonParserTask;
 import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.GindActivity;
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 import com.baker.abaker.client.PostClientTask;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.model.Magazine;

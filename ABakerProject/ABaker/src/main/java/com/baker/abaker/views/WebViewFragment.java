@@ -44,7 +44,7 @@ import android.widget.FrameLayout;
 
 import com.baker.abaker.Configuration;
 import com.baker.abaker.MagazineActivity;
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;

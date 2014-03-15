@@ -62,7 +62,7 @@ import com.baker.abaker.views.MagazineThumb;
 import com.baker.abaker.workers.CheckInternetTask;
 import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.GCMRegistrationWorker;
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 import com.baker.abaker.views.FlowLayout;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;

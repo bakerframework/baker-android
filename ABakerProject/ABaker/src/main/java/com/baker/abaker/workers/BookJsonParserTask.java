@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.baker.abaker.Configuration;
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.views.MagazineThumb;
 

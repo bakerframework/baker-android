@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.baker.abaker.client.GindMandator;
-import com.giniem.gindpubs.R;
+import com.baker.abaker.R;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
