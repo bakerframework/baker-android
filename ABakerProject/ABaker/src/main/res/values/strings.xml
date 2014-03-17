@@ -10,6 +10,7 @@
     <string name="app_id">Baker Android</string>
     <string name="exit">Exit</string>
     <string name="closing_app">If you exit now, all downloads will be cancelled, are you sure you want to exit ?</string>
+    <string name="no_shelf_no_internet">You must have an internet connection to download the shelf.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
 

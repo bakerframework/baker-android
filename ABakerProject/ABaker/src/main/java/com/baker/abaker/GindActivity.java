@@ -263,9 +263,15 @@ public class GindActivity extends Activity implements GindMandator {
                 useBackup = false;
             }
         } else {
-            Toast.makeText(this, "You must have an internet connection to download the shelf.",
-                    Toast.LENGTH_LONG).show();
-            this.finish();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(this.getString(R.string.exit))
+                    .setMessage(this.getString(R.string.no_shelf_no_internet))
+                    .setPositiveButton(this.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            GindActivity.this.finish();
+                        }
+                    })
+                    .show();
         }
     }
 
@@ -541,8 +547,7 @@ public class GindActivity extends Activity implements GindMandator {
                     this.registrationId = params[1];
                     this.storeRegistrationId(this.getApplicationContext(), params[1]);
                 } else {
-                    Toast.makeText(this, "Could not create registration ID for GCM services.",
-                            Toast.LENGTH_LONG).show();
+                    // Could not create registration ID for GCM services.
                 }
                 break;
             case CHECK_INTERNET_TASK:
