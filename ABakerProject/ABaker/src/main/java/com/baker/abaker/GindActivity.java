@@ -40,7 +40,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.Gravity;
@@ -58,12 +57,11 @@ import android.widget.Toast;
 import com.baker.abaker.client.GindMandator;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.model.Magazine;
+import com.baker.abaker.views.FlowLayout;
 import com.baker.abaker.views.MagazineThumb;
 import com.baker.abaker.workers.CheckInternetTask;
 import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.GCMRegistrationWorker;
-import com.baker.abaker.R;
-import com.baker.abaker.views.FlowLayout;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -625,7 +623,7 @@ public class GindActivity extends Activity implements GindMandator {
 
             if (this.magazineZipExists(zipName) && !thumb.isDownloading()) {
                 Log.d(this.getClass().toString(), "Continue unzip of " + thumb.getMagazine().getName());
-                String filepath = Environment.getExternalStorageDirectory().getPath() + thumb.getMagazinesDirectory() + File.separator + zipName;
+                String filepath = Configuration.getMagazinesDirectory(this.getApplicationContext()) + File.separator + zipName;
 
                 thumb.startUnzip(filepath, thumb.getMagazine().getName());
             } else if (thumb.isDownloading()) {
