@@ -203,8 +203,8 @@ public class GindActivity extends Activity implements GindMandator {
         File cachedShelf = new File(cacheShelfPath);
         File backup = new File(cacheShelfPath + ".backup");
         boolean useBackup = false;
-        boolean hasInternetAccess = (internetAccess.equals("TRUE")) ? true : false;
         Log.d(this.getClass().toString(), "INTERNET ACCESS RAW: " + internetAccess);
+        boolean hasInternetAccess = (internetAccess.equals("TRUE")) ? true : false;
 
         if (hasInternetAccess) {
             Log.d(this.getClass().toString(), "INTERNET ACCESS AVAILABLE, WILL TRY TO CREATE BACKUP SHELF.");

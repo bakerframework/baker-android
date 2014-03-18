@@ -10,9 +10,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
-import com.baker.abaker.client.GindMandator;
-import com.baker.abaker.Configuration;
 import com.baker.abaker.GindActivity;
+import com.baker.abaker.client.GindMandator;
 
 import java.io.File;
 
@@ -148,7 +147,8 @@ public class DownloaderTask extends AsyncTask<String, Long, String> {
 
         if (this.isOverwrite() && !this.isDownloading()) {
 
-            String filepath = Configuration.getFilesDirectory(this.context) + downloadPath + File.separator + fileName;
+            String filepath = downloadPath + File.separator + fileName;
+            Log.d(this.getClass().toString(), "DownloaderTask will overwrite the file " + filepath);
 
             boolean result = this.fileExists(filepath);
 
