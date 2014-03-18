@@ -29,6 +29,8 @@ package com.baker.abaker;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
@@ -51,7 +53,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import com.baker.abaker.R;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.views.CustomWebView;
 import com.baker.abaker.views.CustomWebViewPager;
@@ -241,24 +242,34 @@ public class MagazineActivity extends FragmentActivity {
                         // Aaaaand that was the process of removing the referrer from the query string.
 
                         if (!url.getProtocol().equals("file")) {
-                            Uri uri = Uri.parse(stringUrl);
-                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                            startActivity(intent);
+                            Log.d("REFERRER>>>", "THE REFERRER IS: " + referrer);
+                            if (referrer.equals(MagazineActivity.this.getString(R.string.url_external_referrer))) {
+                                Uri uri = Uri.parse(stringUrl);
+                                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                startActivity(intent);
+                            } else if (referrer.equals(MagazineActivity.this.getString(R.string.url_gindpubs_referrer))) {
+                                MagazineActivity.this.openLinkInModal(stringUrl);
+                                return true;
+                            } else {
+                                // We return false to tell the webview that we are not going to handle the URL override.
+                                return false;
+                            }
                         } else {
-                            Log.d(">>>URL_DATA", "FINAL INTERNAL URL = " + stringUrl);
                             stringUrl = url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
+                            Log.d(">>>URL_DATA", "FINAL INTERNAL HTML FILENAME = " + stringUrl);
 
-                            int index = book.getContents().indexOf(stringUrl);
+                            int index = MagazineActivity.this.getJsonBook().getContents().indexOf(stringUrl);
 
                             if (index != -1) {
                                 Log.d(this.getClass().toString(), "Index to load: " + index
                                         + ", page: " + stringUrl);
 
-                                pager.setCurrentItem(index);
+                                MagazineActivity.this.getPager().setCurrentItem(index);
                                 view.setVisibility(View.GONE);
                             } else {
 
                                 // If the file DOES NOT exist, we won't load it.
+
                                 File htmlFile = new File(url.getPath());
                                 if (htmlFile.exists()) {
                                     return false;
@@ -324,6 +335,30 @@ public class MagazineActivity extends FragmentActivity {
         }
         return true;
 	}
+
+    public void openLinkInModal(final String url) {
+        AlertDialog.Builder modal = new AlertDialog.Builder(this);
+
+        WebView wv = new WebView(this);
+        wv.loadUrl(url);
+        wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+
+                return true;
+            }
+        });
+
+        modal.setView(wv);
+        modal.setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        modal.show();
+    }
 
 	/**
 	 * Used to handle the gestures, but we will only need the onDoubleTap. The

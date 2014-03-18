@@ -128,12 +128,15 @@ public class WebViewFragment extends Fragment {
                         // Aaaaand that was the process of removing the referrer from the query string.
 
                         if (!url.getProtocol().equals("file")) {
-                            if (referrer == WebViewFragment.this.getActivity().getApplicationContext().getString(R.string.url_external_referrer)) {
+                            Log.d("REFERRER>>>", "THE REFERRER IS: " + referrer);
+                            if (referrer.equals(WebViewFragment.this.activity.getString(R.string.url_external_referrer))) {
                                 Uri uri = Uri.parse(stringUrl);
                                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                                 startActivity(intent);
+                            } else if (referrer.equals(WebViewFragment.this.activity.getString(R.string.url_gindpubs_referrer))) {
+                                WebViewFragment.this.activity.openLinkInModal(stringUrl);
+                                return true;
                             } else {
-
                                 // We return false to tell the webview that we are not going to handle the URL override.
                                 return false;
                             }
