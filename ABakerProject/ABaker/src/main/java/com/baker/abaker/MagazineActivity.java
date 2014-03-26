@@ -29,8 +29,6 @@ package com.baker.abaker;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
@@ -74,6 +72,8 @@ public class MagazineActivity extends FragmentActivity {
 	private CustomWebViewPager pager;
     private BookJson jsonBook;
 
+    public final static String MODAL_URL = "com.giniem.gindpubs.MODAL_URL";
+    public final static String ORIENTATION = "com.giniem.gindpubs.ORIENTATION";
     private final String LANDSCAPE = "LANDSCAPE";
     private final String PORTRAIT = "PORTRAIT";
 
@@ -110,9 +110,6 @@ public class MagazineActivity extends FragmentActivity {
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.html_pager);
-
-		// Show the Up button in the action bar.
-		// setupActionBar();
 
 		Intent intent = getIntent();
 
@@ -337,27 +334,10 @@ public class MagazineActivity extends FragmentActivity {
 	}
 
     public void openLinkInModal(final String url) {
-        AlertDialog.Builder modal = new AlertDialog.Builder(this);
-
-        WebView wv = new WebView(this);
-        wv.loadUrl(url);
-        wv.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-
-                return true;
-            }
-        });
-
-        modal.setView(wv);
-        modal.setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int id) {
-                dialog.dismiss();
-            }
-        });
-        modal.show();
+        Intent intent = new Intent(this, ModalActivity.class);
+        intent.putExtra(MODAL_URL, url);
+        intent.putExtra(ORIENTATION, this.getRequestedOrientation());
+        startActivity(intent);
     }
 
 	/**

@@ -244,7 +244,6 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     public void enableReadArchiveActions() {
         findViewById(R.id.btnDownload).setVisibility(View.GONE);
         findViewById(R.id.actions_ui).setVisibility(View.VISIBLE);
-        //findViewById(R.id.btnRead).setVisibility(View.VISIBLE);
 
         //Issue becomes readable
         readable = true;
