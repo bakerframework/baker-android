@@ -27,6 +27,7 @@
  **/
 package com.baker.abaker;
 
+import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -36,7 +37,6 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.baker.abaker.R;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.json.JSONObject;
@@ -82,9 +82,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
 
                         this.sendNotification(context, title, message);
                     } else if ("background-download".equals(type)) {
-
-                        if (json.has("issueName")) {
-
+                        if (json.has("issueName") && !this.appIsRunning(context)) {
                             // Values can be "latest" or the name of the issue, for example "magazine-12". This value is required.
                             String issueName = json.getString("issueName");
                             Intent gindIntent = new Intent(context, GindActivity.class);
@@ -105,6 +103,16 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
                 Log.i(this.getClass().toString(), "Received: " + extras.toString());
             }
         }
+    }
+
+    private boolean appIsRunning(Context context) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningAppProcessInfo app : manager.getRunningAppProcesses()) {
+            if (context.getApplicationContext().getPackageName().trim().equals(app.processName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void sendNotification(Context context, String title, String message) {

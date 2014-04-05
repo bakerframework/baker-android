@@ -118,7 +118,7 @@ public class GindActivity extends Activity implements GindMandator {
     public static String userAccount = "";
 
     private boolean isLoading = true;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -424,7 +424,7 @@ public class GindActivity extends Activity implements GindMandator {
                 //Starting the ThumbLayout
 				MagazineThumb thumb = new MagazineThumb(this, mag);
                 thumb.init(this, null);
-                if(this.magazineExists(mag.getName())) {
+                if (this.magazineExists(mag.getName())) {
                     thumb.enableReadArchiveActions();
                 }
 
@@ -601,8 +601,12 @@ public class GindActivity extends Activity implements GindMandator {
                 String dateString = sdfOutput.format(list.get(0));
 
                 if (thumb.getMagazine().getDate().equals(dateString)) {
-                    Log.d("Automatically starting download of ", thumb.getMagazine().getName());
-                    thumb.startPackageDownload();
+                    if (!this.magazineExists(thumb.getMagazine().getName())) {
+                        Log.d(this.getClass().toString(), "Automatically starting download of " + thumb.getMagazine().getName());
+                        thumb.startPackageDownload();
+                    } else {
+                        Log.d(this.getClass().toString(), "The magazine with name '" + thumb.getMagazine().getName() + "' already exists.");
+                    }
                 }
             }
         } catch (Exception ex) {
