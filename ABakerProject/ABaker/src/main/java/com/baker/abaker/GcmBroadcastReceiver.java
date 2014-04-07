@@ -82,7 +82,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
 
                         this.sendNotification(context, title, message);
                     } else if ("background-download".equals(type)) {
-                        if (json.has("issueName") && !this.appIsRunning(context)) {
+                        if (json.has("issueName")) {
                             // Values can be "latest" or the name of the issue, for example "magazine-12". This value is required.
                             String issueName = json.getString("issueName");
                             Intent gindIntent = new Intent(context, GindActivity.class);

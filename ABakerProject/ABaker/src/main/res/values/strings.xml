@@ -3,6 +3,7 @@
 
     <!-- Properties to configure the application's UI and behaviour -->
 
+
     <!-- Project Number of the Google API console identifying the notifications sender -->
     <string name="sender_id"></string>
 
@@ -10,7 +11,7 @@
     <string name="app_id">Baker Android</string>
     <string name="exit">Exit</string>
     <string name="closing_app">If you exit now, all downloads will be cancelled, are you sure you want to exit ?</string>
-    <string name="no_shelf_no_internet">You must have an internet connection to download the shelf.</string>
+    <string name="no_shelf_no_internet">You need internet connection the first time you start this application.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
@@ -21,7 +22,8 @@
     <string name="post_apns_token_url">http://bakerframework.com/demo/shelf.json</string>
     <string name="download_report_url">http://bakerframework.com/demo/shelf.json</string>
 
-    <!-- Referrer strings to use with links to open them in the device's internet browser or in the same view from gindpubs
+    <!--
+         Referrer strings to use with links to open them in the device's internet browser or in the same view from gindpubs
         For more information about links: https://github.com/bakerframework/baker/wiki/Managing-links-and-urls
     -->
     <string name="url_gindpubs_referrer">Baker</string>
@@ -41,7 +43,6 @@
 
     <!-- Name of the magazine's index file. -->
     <string name="index">index.html</string>
-
     <string name="package_extension">.zip</string>
 
     <!-- General strings for the UI -->
@@ -61,8 +62,6 @@
     <string name="thumbImageDescription">Thumbnail</string>
     <string name="confirmation">Confirmation</string>
     <string name="archiveConfirm">Are you sure you want to archive this issue?</string>
-
-
     <string name="title_activity_video">VideoActivity</string>
 
     <!-- Hostname to try to reach to test the internet connection on the device, e.g. when downloading the shelf, check if your server is reachable. -->
