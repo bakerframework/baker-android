@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.baker.abaker"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.1" >
 
     <uses-sdk
         android:minSdkVersion="11"
@@ -48,7 +48,7 @@
             android:parentActivityName="com.baker.abaker.GindActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.giniem.gindpubs.GindActivity" />
+                android:value="com.baker.abaker.GindActivity" />
         </activity>
         <activity
             android:name="com.baker.abaker.ModalActivity"
@@ -57,7 +57,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.giniem.gindpubs.MagazineActivity" />
+                android:value="com.baker.abaker.MagazineActivity" />
         </activity>
 
         <receiver
@@ -66,7 +66,7 @@
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
 
-                <category android:name="com.giniem.gindpubs" />
+                <category android:name="com.baker.abaker" />
             </intent-filter>
         </receiver>
     </application>
