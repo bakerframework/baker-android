@@ -1,5 +1,24 @@
-<com.baker.abaker.views.CustomWebView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/webpage1"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:padding="0dp">
+
+    <com.baker.abaker.views.CustomWebView
+        android:id="@+id/webpage1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/progressBarContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/progressBar"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+</FrameLayout>

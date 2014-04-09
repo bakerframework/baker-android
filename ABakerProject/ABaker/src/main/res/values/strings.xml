@@ -54,6 +54,8 @@
     <string name="inputDateFormat">yyyy-MM-dd hh:mm:ss</string>
     <string name="outputDateFormat">dd MMM yyyy</string>
     <string name="download">Download</string>
+    <string name="preview">Preview</string>
+    <string name="loadingPreview">Loading Preview</string>
     <string name="read">Read</string>
     <string name="archive">Archive</string>
     <string name="downloading">Starting download</string>

@@ -56,7 +56,8 @@ import java.util.Map;
 public class WebViewFragment extends Fragment {
 
 	public static final String ARG_OBJECT = "object";
-	
+
+    private FrameLayout progressBarContainer;
 	private CustomWebView webView;
     private FrameLayout customViewContainer;
     private WebChromeClient.CustomViewCallback customViewCallback;
@@ -79,6 +80,7 @@ public class WebViewFragment extends Fragment {
 		customViewContainer = (FrameLayout) this.getActivity().findViewById(R.id.customViewContainer);
 		
 		webView = (CustomWebView) rootView.findViewById(R.id.webpage1);
+        progressBarContainer = (FrameLayout) rootView.findViewById(R.id.progressBarContainer);
 
         //Enable javascript
         webView.getSettings().setJavaScriptEnabled(true);
@@ -241,6 +243,14 @@ public class WebViewFragment extends Fragment {
             activity.resetOrientation();
 
             customView = null;
+        }
+
+        @Override
+        public void onProgressChanged(WebView view, int newProgress) {
+
+            if (100 == newProgress) {
+                progressBarContainer.setVisibility(View.GONE);
+            }
         }
     }
 }

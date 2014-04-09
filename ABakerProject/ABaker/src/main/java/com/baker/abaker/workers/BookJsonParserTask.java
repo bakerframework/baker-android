@@ -9,6 +9,10 @@ import com.baker.abaker.R;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.views.MagazineThumb;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,36 +41,60 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
 	protected BookJson doInBackground(String... params) {
 		BookJson result  = null;
 		
-		String workingDir = this.magazinesDirectory + File.separator;
-		File book = new File(workingDir + params[0] + File.separator + this.magThumb.getContext().getString(R.string.book));
-		
-		String rawJson;
-		
+		String rawJson = "";
 		try {
-			FileInputStream input = new FileInputStream(book);
-			
-			BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-		    StringBuilder sb = new StringBuilder();
-		    String line = null;
-		    while ((line = reader.readLine()) != null) {
-		      sb.append(line).append("\n");
-		    }
-		    rawJson = sb.toString();
+            if ("ONLINE".equals(params[0])) {
+                Log.d(this.getClass().toString(), "Will parse the BookJson from the Live URL: " + this.magThumb.getMagazine().getLiveUrl());
 
-		    Log.d(this.getClass().toString(), "Book.json read from file: " + rawJson);
+                DefaultHttpClient httpClient = new DefaultHttpClient();
+                HttpGet httpGet = new HttpGet(this.magThumb.getMagazine().getLiveUrl() + "/" + this.magThumb.getContext().getString(R.string.book));
+                HttpResponse response = httpClient.execute(httpGet);
+                if (null != response) {
+
+                    int statusCode = response.getStatusLine().getStatusCode();
+                    if (statusCode == 200) {
+                        rawJson = EntityUtils.toString(response.getEntity());
+                        Log.d(this.getClass().toString(), "Get request for book.json succeeded: " + rawJson);
+                    } else {
+                        Log.e(this.getClass().toString(), "Bad response when obtaining the book.json: " + statusCode);
+                    }
+                } else {
+                    Log.e(this.getClass().toString(), "The response is NULL when obtaining the book.json.");
+                }
+            } else {
+                Log.d(this.getClass().toString(), "Will parse the BookJson from the file system." );
+
+                String workingDir = this.magazinesDirectory + File.separator;
+                File book = new File(workingDir + params[0] + File.separator + this.magThumb.getContext().getString(R.string.book));
+
+                FileInputStream input = new FileInputStream(book);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+                rawJson = sb.toString();
+
+                Log.d(this.getClass().toString(), "Book.json read from file: " + rawJson);
+
+                input.close();
+            }
 		    
 		    boolean valid = this.validateJson(rawJson);
 		    
 		    if (valid) {
 			    Log.d(this.getClass().toString(), "Book.json is valid.");
 		    	result = new BookJson();
+                if (this.magThumb.getMagazine().getLiveUrl() != null) {
+                    result.setLiveUrl(this.magThumb.getMagazine().getLiveUrl() + "/");
+                }
 		    	result.fromJson(rawJson);
 		    	result.setMagazineName(this.magThumb.getMagazine().getName());
 		    } else {
 			    Log.d(this.getClass().toString(), "Book.json is NOT valid.");
 		    }
-			
-			input.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			result = null;

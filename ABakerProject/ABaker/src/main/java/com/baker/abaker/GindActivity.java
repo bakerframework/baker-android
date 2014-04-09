@@ -412,14 +412,23 @@ public class GindActivity extends Activity implements GindMandator {
                 int size = 0;
                 if (json.has("size")) size = json.getInt("size");
 
+                String encoding = "UTF-8";
+
                 Magazine mag = new Magazine();
-                mag.setName(new String(json.getString("name").getBytes("UTF-8"), "UTF-8"));
-                mag.setTitle(new String(json.getString("title").getBytes("UTF-8"), "UTF-8"));
-                mag.setInfo(new String(json.getString("info").getBytes("UTF-8"), "UTF-8"));
+                mag.setName(new String(json.getString("name").getBytes(encoding), encoding));
+                mag.setTitle(new String(json.getString("title").getBytes(encoding), encoding));
+                mag.setInfo(new String(json.getString("info").getBytes(encoding), encoding));
                 mag.setDate(dateString);
                 mag.setSize(size);
-                mag.setCover(new String(json.getString("cover").getBytes("UTF-8"), "UTF-8"));
-                mag.setUrl(new String(json.getString("url").getBytes("UTF-8"), "UTF-8"));
+                mag.setCover(new String(json.getString("cover").getBytes(encoding), encoding));
+                mag.setUrl(new String(json.getString("url").getBytes(encoding), encoding));
+
+                if (json.has("liveUrl")) {
+                    String liveUrl = new String(json.getString("liveUrl").getBytes(encoding), encoding);
+                    liveUrl = liveUrl.replace("/" + this.getString(R.string.book), "");
+                    liveUrl = liveUrl.replace("/" + mag.getName(), "");
+                    mag.setLiveUrl(liveUrl);
+                }
 
                 //Starting the ThumbLayout
 				MagazineThumb thumb = new MagazineThumb(this, mag);

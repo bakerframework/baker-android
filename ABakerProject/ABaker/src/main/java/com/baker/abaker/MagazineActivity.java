@@ -117,6 +117,7 @@ public class MagazineActivity extends FragmentActivity {
 			jsonBook = new BookJson();
             jsonBook.setMagazineName(intent
 					.getStringExtra(GindActivity.MAGAZINE_NAME));
+            Log.d(this.getClass().toString(), "THE RAW BOOK.JSON IS: " + intent.getStringExtra(GindActivity.BOOK_JSON_KEY));
             jsonBook.fromJson(intent.getStringExtra(GindActivity.BOOK_JSON_KEY));
 
             this.setOrientation(jsonBook.getOrientation());
@@ -186,7 +187,12 @@ public class MagazineActivity extends FragmentActivity {
 	@SuppressLint("SetJavaScriptEnabled")
 	private void setPagerView(final BookJson book) {
 
-		String path = "file://" + Configuration.getMagazinesDirectory(this) + File.separator;
+        String path = "file://" + Configuration.getMagazinesDirectory(this) + File.separator;
+        if (book.getLiveUrl() != null) {
+            path = book.getLiveUrl();
+        }
+
+        Log.d(this.getClass().toString(), "THE PATH FOR LOADING THE PAGES WILL BE: " + path);
 
 		// ViewPager and its adapters use support library
 		// fragments, so use getSupportFragmentManager.

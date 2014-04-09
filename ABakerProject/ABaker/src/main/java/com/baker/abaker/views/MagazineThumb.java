@@ -45,14 +45,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baker.abaker.Configuration;
-import com.baker.abaker.client.GindMandator;
-import com.baker.abaker.workers.BookJsonParserTask;
-import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.GindActivity;
 import com.baker.abaker.R;
+import com.baker.abaker.client.GindMandator;
 import com.baker.abaker.client.PostClientTask;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.model.Magazine;
+import com.baker.abaker.workers.BookJsonParserTask;
+import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.MagazineDeleteTask;
 import com.baker.abaker.workers.UnzipperTask;
 
@@ -114,16 +114,22 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private Context context;
 
     /**
+     * Set to true when the user uses the Preview button rather than downloding the package.
+     */
+    private boolean previewLoaded = false;
+
+    /**
      * Creates an instance of MagazineThumb to with an activity context.
+     *
      * @param context the parent Activity context.
      */
-	public MagazineThumb(Context context, Magazine mag) {
-		super(context);
+    public MagazineThumb(Context context, Magazine mag) {
+        super(context);
 
         this.context = context;
 
         //Paths to the application files
-        magazinesDirectory = Configuration.getMagazinesDirectory(context);//File.separator.concat(Configuration.MAGAZINES_FILES_DIR);//Configuration.getApplicationRelativeMagazinesPath(context);
+        magazinesDirectory = Configuration.getMagazinesDirectory(context);
         cachePath = Configuration.getCacheDirectory(context);
 
         //Set the magazine model to the thumb instance.
@@ -162,16 +168,17 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
 
     /**
      * Initialize the view
+     *
      * @param context Application Context
-     * @param attrs Attributes to pass to the view.
+     * @param attrs   Attributes to pass to the view.
      */
-	public void init(final Context context, AttributeSet attrs) {
-		setOrientation(LinearLayout.HORIZONTAL);
+    public void init(final Context context, AttributeSet attrs) {
+        setOrientation(LinearLayout.HORIZONTAL);
 
         //Creating the view from the XML
-		LayoutInflater inflater = (LayoutInflater) context
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		inflater.inflate(R.layout.magazine_thumb_options, this, true);
+        LayoutInflater inflater = (LayoutInflater) context
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater.inflate(R.layout.magazine_thumb_options, this, true);
 
         // Download the cover if not exists.
         if (!(new File(Configuration.getCacheDirectory(this.getContext())
@@ -183,9 +190,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         }
 
         //Set texts and values into the layout
-		((TextView) findViewById(R.id.txtTitle)).setText(this.magazine.getTitle());
+        ((TextView) findViewById(R.id.txtTitle)).setText(this.magazine.getTitle());
         ((TextView) findViewById(R.id.txtInfo)).setText(this.magazine.getInfo());
-		((TextView) findViewById(R.id.txtDate)).setText(this.magazine.getDate());
+        ((TextView) findViewById(R.id.txtDate)).setText(this.magazine.getDate());
         if (this.magazine.getSize() == 0) {
             //Hide the size if not set
             findViewById(R.id.txtSize).setVisibility(View.GONE);
@@ -208,7 +215,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             }
         });
 
-		//Click on download button
+        //Click on download button
         findViewById(R.id.btnDownload).setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 startPackageDownload();
@@ -216,11 +223,11 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         });
 
         // Click on the Read button.
-		findViewById(R.id.btnRead).setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
+        findViewById(R.id.btnRead).setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
                 readIssue();
-			}
-		});
+            }
+        });
 
         // Click on the ARCHIVE button.
         findViewById(R.id.btnArchive).setOnClickListener(new OnClickListener() {
@@ -228,10 +235,22 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                 deleteIssue();
             }
         });
-	}
+
+        // If there is a liveUrl key on the json we enable the functionality to read the
+        // magazine online.
+        if (this.magazine.getLiveUrl() != null) {
+            findViewById(R.id.btnPreview).setVisibility(View.VISIBLE);
+            findViewById(R.id.btnPreview).setOnClickListener(new OnClickListener() {
+                public void onClick(View v) {
+                    readOnline();
+                }
+            });
+        }
+    }
 
     /**
      * This method should return the package downloader task to be able to cancel it.
+     *
      * @return DownloaderTask
      */
     public DownloaderTask getPackDownloader() {
@@ -242,7 +261,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      * Updates the UI to allow the user read/archive the issue.
      */
     public void enableReadArchiveActions() {
-        findViewById(R.id.btnDownload).setVisibility(View.GONE);
+        findViewById(R.id.download_container).setVisibility(View.GONE);
         findViewById(R.id.actions_ui).setVisibility(View.VISIBLE);
 
         //Issue becomes readable
@@ -255,10 +274,14 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         if (null != this.book) {
             GindActivity activity = (GindActivity) this.getContext();
             activity.viewMagazine(this.book);
-
         } else {
             Toast.makeText(this.getContext(), "Not valid book.json found!",
                     Toast.LENGTH_LONG).show();
+        }
+
+        if (this.previewLoaded == true) {
+            findViewById(R.id.download_container).setVisibility(View.VISIBLE);
+            findViewById(R.id.txtProgress).setVisibility(View.GONE);
         }
     }
 
@@ -269,6 +292,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     /**
      * This should let other instances know if this Magazine Thumb instance is already
      * downloading a package.
+     *
      * @return boolean true if downloading false, otherwise.
      */
     public boolean isDownloading() {
@@ -290,7 +314,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Setting text and showing progress text
-                        ((TextView)findViewById(R.id.txtProgress)).setText(R.string.deleting);
+                        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.deleting);
                         findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
 
                         MagazineDeleteTask deleter = new MagazineDeleteTask(
@@ -309,6 +333,17 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         BookJsonParserTask parser = new BookJsonParserTask(
                 MagazineThumb.this);
         parser.execute(magazine.getName());
+    }
+
+    private void readOnline() {
+        previewLoaded = true;
+        findViewById(R.id.download_container).setVisibility(View.GONE);
+        findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.loadingPreview);
+
+        BookJsonParserTask parser = new BookJsonParserTask(
+                MagazineThumb.this);
+        parser.execute("ONLINE");
     }
 
     /**
@@ -332,46 +367,48 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
 
         //If the issue is not downloading we start the download, otherwise, do nothing.
         //if (!isDownloading()) {
-            // Hide download button
-            findViewById(R.id.btnDownload).setVisibility(View.GONE);
+        // Hide download button
+        findViewById(R.id.download_container).setVisibility(View.GONE);
 
-            // Hide Read and Archive Buttons
-            findViewById(R.id.actions_ui).setVisibility(View.GONE);
+        // Hide Read and Archive Buttons
+        findViewById(R.id.actions_ui).setVisibility(View.GONE);
 
-            //Show progressbar and progress text
-            findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
-            ((TextView) findViewById(R.id.txtProgress)).setText(R.string.downloading);
-            findViewById(R.id.progress_ui).setVisibility(View.VISIBLE);
+        //Show progressbar and progress text
+        findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.downloading);
+        findViewById(R.id.progress_ui).setVisibility(View.VISIBLE);
 
-            packDownloader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "");
+        packDownloader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "");
         //}
     }
 
     /**
      * Start the unzipping task for an issue. Also handles the controls update.
+     *
      * @param filePath the path where the file to unzip is located.
-     * @param name the name of the file to unzip.
+     * @param name     the name of the file to unzip.
      */
-	public void startUnzip(final String filePath, final String name) {
+    public void startUnzip(final String filePath, final String name) {
 
         //Make sure the unzipper gets initialized
         if (null == this.unzipperTask) {
             this.unzipperTask = new UnzipperTask(context, this, UNZIP_MAGAZINE_TASK);
         }
 
-        findViewById(R.id.btnDownload).setVisibility(View.GONE);
+        findViewById(R.id.download_container).setVisibility(View.GONE);
         findViewById(R.id.actions_ui).setVisibility(View.GONE);
 //        findViewById(R.id.btnRead).setVisibility(View.GONE);
         //Shows and set the text of progress
-        ((TextView)findViewById(R.id.txtProgress)).setText(R.string.unzipping);
+        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.unzipping);
         findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
 
         //Starts the unzipping task
-		unzipperTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, filePath, name);
-	}
+        unzipperTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, filePath, name);
+    }
 
     /**
      * Sets an image file as the cover of this instance of an issue.
+     *
      * @param path the path of the file to render.
      */
     private void renderCover(final String path) {
@@ -383,7 +420,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      * Updates the UI to let the user download the issue.
      */
     private void enableDownloadAction() {
-        findViewById(R.id.btnDownload).setVisibility(View.VISIBLE);
+        findViewById(R.id.download_container).setVisibility(View.VISIBLE);
         findViewById(R.id.actions_ui).setVisibility(View.GONE);
         //findViewById(R.id.btnRead).setVisibility(View.GONE);
 
@@ -409,7 +446,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      * As an instance of GindMandator, this class has to implement updateProgress
      * to update the UI when some of the task change it status.
      *
-     * @param taskId the id of the task that changed status.
+     * @param taskId   the id of the task that changed status.
      * @param progress the progress indicators.
      */
     @Override
@@ -422,9 +459,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             Integer intProgress = (int) (long) progress[0];
 
             //Updating UI
-            ((TextView)findViewById(R.id.txtProgress))
+            ((TextView) findViewById(R.id.txtProgress))
                     .setText(String.valueOf(fileProgress) + " MB (" + intProgress + " %)");
-            ((ProgressBar)findViewById(R.id.prgDownload)).setProgress(intProgress);
+            ((ProgressBar) findViewById(R.id.prgDownload)).setProgress(intProgress);
         }
     }
 
@@ -432,7 +469,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      * As an instance of GindMandator, this class should implement a method postExecute
      * to be executed when one of the tasks is done.
      *
-     * @param taskId the id of the task that ended.
+     * @param taskId  the id of the task that ended.
      * @param results the results values.
      */
     @Override

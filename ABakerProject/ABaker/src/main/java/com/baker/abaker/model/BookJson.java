@@ -74,6 +74,11 @@ public class BookJson {
 
 	private boolean pageTurnTap;
 
+    /**
+     * We set it empty by default (not null), because we will use it anyways.
+     */
+    private String liveUrl;
+
 	private List<String> contents;
 	
 	public BookJson() {
@@ -240,9 +245,20 @@ public class BookJson {
 		this.magazineName = magazineName;
 	}
 
-	public void fromJson(final String jsonString) throws JSONException,
+    public String getLiveUrl() {
+        return liveUrl;
+    }
+
+    public void setLiveUrl(String liveUrl) {
+        this.liveUrl = liveUrl;
+    }
+
+    public void fromJson(final String jsonString) throws JSONException,
 			ParseException {
 		JSONObject json = new JSONObject(jsonString);
+        if (json.has("liveUrl")) {
+            this.liveUrl = json.getString("liveUrl");
+        }
 //		SimpleDateFormat sdfInput = new SimpleDateFormat("yyyy-MM-dd",
 //				Locale.US);
 
@@ -279,6 +295,9 @@ public class BookJson {
 //		}
 
 		for (int i = 0; i < contents.length(); i++) {
+
+            // We prepend the live URL, if it is empty it won't matter because it would
+            // mean that the magazine is being loaded from the device's filesystem.
 			this.contents.add(contents.getString(i));
 		}
 	}
@@ -302,6 +321,7 @@ public class BookJson {
 		result.put("-baker-page-numbers-color", this.pageNumberColors);
 		result.put("-baker-rendering", this.rendering);
 		result.put("-baker-page-turn-tap", this.pageTurnTap);
+        result.put("liveUrl", this.liveUrl);
 		
 		JSONArray authors = new JSONArray();
 		JSONArray creators = new JSONArray();

@@ -37,6 +37,7 @@ public class Magazine {
     private String cover;
     private String url;
     private Integer sizeMB;
+    private String liveUrl;
 
     public String getName() {
         return name;
@@ -101,4 +102,8 @@ public class Magazine {
     public void setSizeMB(Integer sizeMB) {
         this.sizeMB = sizeMB;
     }
+
+    public String getLiveUrl() { return liveUrl; }
+
+    public void setLiveUrl(String liveUrl) { this.liveUrl = liveUrl; }
 }
