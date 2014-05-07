@@ -240,6 +240,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         // magazine online.
         if (this.magazine.getLiveUrl() != null) {
             findViewById(R.id.btnPreview).setVisibility(View.VISIBLE);
+            findViewById(R.id.btnPreviewSpacer).setVisibility(View.VISIBLE);
             findViewById(R.id.btnPreview).setOnClickListener(new OnClickListener() {
                 public void onClick(View v) {
                     readOnline();
