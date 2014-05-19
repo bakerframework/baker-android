@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="@string/pref_notifications_title"
+        android:key="pref_notifications">
+
+        <CheckBoxPreference
+            android:key="pref_receive_notifications"
+            android:title="@string/pref_receive_notifications"
+            android:summary="@string/pref_receive_notifications_summary"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:dependency="pref_receive_notifications"
+            android:key="pref_receive_notifications_download"
+            android:title="@string/pref_receive_notifications_download"
+            android:summary="@string/pref_receive_notifications_download_summary"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:dependency="pref_receive_notifications_download"
+            android:key="pref_receive_notifications_download_only_wifi"
+            android:title="@string/pref_receive_notifications_download_only_wifi"
+            android:summary="@string/pref_receive_notifications_download_only_wifi_summary"
+            android:defaultValue="true" />
+
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

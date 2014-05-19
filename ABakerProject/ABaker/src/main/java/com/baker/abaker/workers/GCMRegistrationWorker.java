@@ -59,6 +59,7 @@ public class GCMRegistrationWorker extends AsyncTask<Void, Long, String[]> {
             // The request to your server should be authenticated if your app
             // is using accounts.
             if (sendRegistrationIdToBackend(regid)) {
+                Log.d(this.getClass().toString(), "The Registration ID process with backend was successful.");
                 msg = "SUCCESS";
             }
 

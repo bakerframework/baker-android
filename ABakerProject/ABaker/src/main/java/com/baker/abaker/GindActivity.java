@@ -29,6 +29,7 @@ package com.baker.abaker;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
@@ -40,14 +41,14 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.provider.Settings.Secure;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -57,6 +58,8 @@ import android.widget.Toast;
 import com.baker.abaker.client.GindMandator;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.model.Magazine;
+import com.baker.abaker.settings.Configuration;
+import com.baker.abaker.settings.SettingsActivity;
 import com.baker.abaker.views.FlowLayout;
 import com.baker.abaker.views.MagazineThumb;
 import com.baker.abaker.workers.CheckInternetTask;
@@ -82,8 +85,8 @@ import java.util.Locale;
 
 public class GindActivity extends Activity implements GindMandator {
 
-	public final static String BOOK_JSON_KEY = "com.giniem.gindpubs.BOOK_JSON_KEY";
-	public final static String MAGAZINE_NAME = "com.giniem.gindpubs.MAGAZINE_NAME";
+    public final static String BOOK_JSON_KEY = "com.giniem.gindpubs.BOOK_JSON_KEY";
+    public final static String MAGAZINE_NAME = "com.giniem.gindpubs.MAGAZINE_NAME";
     public static final String PROPERTY_REG_ID = "com.giniem.gindpubs.REGISTRATION_ID";
     public static final String DOWNLOAD_IN_PROGRESS = "com.giniem.gindpubs.DOWNLOAD_ID";
     private static final String PROPERTY_APP_VERSION = "com.giniem.gindpubs.APP_VERSION";
@@ -119,9 +122,12 @@ public class GindActivity extends Activity implements GindMandator {
 
     private boolean isLoading = true;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
+        this.getActionBar().hide();
 
         sdfInput = new SimpleDateFormat(
                 getString(R.string.inputDateFormat), Locale.US);
@@ -133,18 +139,11 @@ public class GindActivity extends Activity implements GindMandator {
             this.startDownload = intent.getStringExtra("START_DOWNLOAD");
         }
 
-		try {
-			// Remove title bar
-			this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-			// Remove notification bar
-			this.getWindow().setFlags(
-					WindowManager.LayoutParams.FLAG_FULLSCREEN,
-					WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        try {
 
             //Getting the user main account
-			AccountManager manager = AccountManager.get(this);
-			Account[] accounts = manager.getAccountsByType("com.google");
+            AccountManager manager = AccountManager.get(this);
+            Account[] accounts = manager.getAccountsByType("com.google");
 
             // If we can't get a google account, then we will have to use
             // any account the user have on the phone.
@@ -160,7 +159,7 @@ public class GindActivity extends Activity implements GindMandator {
                 // then we will have to use the ANDROID_ID,
                 // Read: http://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID
                 Log.e(this.getClass().toString(), "USER ACCOUNT COULD NOT BE RETRIEVED, WILL USE ANDROID_ID.");
-                userAccount = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
+                userAccount = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
             }
             Log.d(this.getClass().getName(), "APP_ID: " + this.getString(R.string.app_id) + ", USER_ID: " + userAccount);
 
@@ -179,11 +178,11 @@ public class GindActivity extends Activity implements GindMandator {
 
             CheckInternetTask checkInternetTask = new CheckInternetTask(this, this, CHECK_INTERNET_TASK);
             checkInternetTask.execute();
-		} catch (Exception e) {
-			e.printStackTrace();
-			Log.e(this.getClass().getName(), "Cannot load configuration.");
-		}
-	}
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(this.getClass().getName(), "Cannot load configuration.");
+        }
+    }
 
     @Override
     protected void onResume() {
@@ -191,12 +190,29 @@ public class GindActivity extends Activity implements GindMandator {
         checkPlayServices();
     }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.gind, menu);
-		return true;
-	}
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.gind, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_info:
+                Intent intent = new Intent(this, InfoActivity.class);
+                intent.putExtra(MagazineActivity.MODAL_URL, getString(R.string.infoUrl));
+                startActivity(intent);
+                return true;
+            case R.id.action_settings:
+                Intent settingsIntent = new Intent(this, SettingsActivity.class);
+                startActivity(settingsIntent);
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
 
     public void downloadShelf(final String internetAccess) {
         String cacheShelfPath = Configuration.getCacheDirectory(this) + File.separator + this.getString(R.string.shelf);
@@ -349,23 +365,23 @@ public class GindActivity extends Activity implements GindMandator {
         webview.loadUrl(getString(R.string.backgroundUrl));
     }
 
-	private void loadingScreen() {
-		setContentView(R.layout.loading);
-		WebView webview = (WebView) findViewById(R.id.loadingWebView);
+    private void loadingScreen() {
+        setContentView(R.layout.loading);
+        WebView webview = (WebView) findViewById(R.id.loadingWebView);
         webview.getSettings().setJavaScriptEnabled(true);
         webview.getSettings().setUseWideViewPort(true);
         webview.getSettings().setLoadWithOverviewMode(true);
         webview.setBackgroundColor(Color.TRANSPARENT);
-		webview.setWebViewClient(new WebViewClient() {
+        webview.setWebViewClient(new WebViewClient() {
 
-			@Override
-			public boolean shouldOverrideUrlLoading(WebView view, String url) {
-				view.loadUrl(url);
-				return true;
-			}
-		});
-		webview.loadUrl(getString(R.string.loadingUrl));
-	}
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
+            }
+        });
+        webview.loadUrl(getString(R.string.loadingUrl));
+    }
 
     private void loadHeader() {
         WebView webview = (WebView) findViewById(R.id.headerView);
@@ -383,28 +399,33 @@ public class GindActivity extends Activity implements GindMandator {
         webview.loadUrl(getString(R.string.headerUrl));
     }
 
-	public void createThumbnails(final JSONArray jsonArray) {
-		Log.d(this.getClass().getName(),
-				"Shelf json contains " + jsonArray.length() + " elements.");
+    public void createThumbnails(final JSONArray jsonArray) {
+        Log.d(this.getClass().getName(),
+                "Shelf json contains " + jsonArray.length() + " elements.");
 
-		JSONObject json;
-		try {
-			this.setContentView(R.layout.activity_gind);
+        JSONObject json;
+        try {
+            this.setContentView(R.layout.activity_gind);
             loadHeader();
             loadBackground();
+            this.getActionBar().show();
+
+            // Modify the action bar to use a custom layout to center the title.
+            this.getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+            this.getActionBar().setCustomView(R.layout.custom_actionbar);
 
             flowLayout = (FlowLayout) findViewById(R.id.thumbsContainer);
 
-			int length = jsonArray.length();
+            int length = jsonArray.length();
 
-			for (int i = 0; i < length; i++) {
-				json = new JSONObject(jsonArray.getString(i));
-				Log.i(this.getClass().getName(), "Parsing JSON object " + json);
+            for (int i = 0; i < length; i++) {
+                json = new JSONObject(jsonArray.getString(i));
+                Log.i(this.getClass().getName(), "Parsing JSON object " + json);
 
-				LinearLayout inner = new LinearLayout(this);
-				inner.setLayoutParams(new LinearLayout.LayoutParams(0,
-						LinearLayout.LayoutParams.MATCH_PARENT, 1));
-				inner.setGravity(Gravity.CENTER_HORIZONTAL);
+                LinearLayout inner = new LinearLayout(this);
+                inner.setLayoutParams(new LinearLayout.LayoutParams(0,
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1));
+                inner.setGravity(Gravity.CENTER_HORIZONTAL);
 
                 //Building magazine data
                 Date date = sdfInput.parse(json.getString("date"));
@@ -431,48 +452,48 @@ public class GindActivity extends Activity implements GindMandator {
                 }
 
                 //Starting the ThumbLayout
-				MagazineThumb thumb = new MagazineThumb(this, mag);
+                MagazineThumb thumb = new MagazineThumb(this, mag);
                 thumb.init(this, null);
                 if (this.magazineExists(mag.getName())) {
                     thumb.enableReadArchiveActions();
                 }
 
                 //Add layout
-				flowLayout.addView(thumb);
-			}
+                flowLayout.addView(thumb);
+            }
 
             isLoading = false;
-		} catch (Exception e) {
+        } catch (Exception e) {
             //TODO: Notify the user about the issue.
-			e.printStackTrace();
-		}
-	}
+            e.printStackTrace();
+        }
+    }
 
-	public void viewMagazine(final BookJson book) {
-		Intent intent = new Intent(this, MagazineActivity.class);
-	    try {
-			intent.putExtra(BOOK_JSON_KEY, book.toJSON().toString());
-			intent.putExtra(MAGAZINE_NAME, book.getMagazineName());
-		    startActivity(intent);
-		} catch (JSONException e) {
-			Toast.makeText(this, "The book.json is invalid.",
-					Toast.LENGTH_LONG).show();
-		}
-	}
+    public void viewMagazine(final BookJson book) {
+        Intent intent = new Intent(this, MagazineActivity.class);
+        try {
+            intent.putExtra(BOOK_JSON_KEY, book.toJSON().toString());
+            intent.putExtra(MAGAZINE_NAME, book.getMagazineName());
+            startActivity(intent);
+        } catch (JSONException e) {
+            Toast.makeText(this, "The book.json is invalid.",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
 
-	private boolean magazineExists(final String name) {
-		boolean result = false;
+    private boolean magazineExists(final String name) {
+        boolean result = false;
 
-		File magazineDir = new File(Configuration.getMagazinesDirectory(this) + File.separator + name);
-		result = magazineDir.exists() && magazineDir.isDirectory();
+        File magazineDir = new File(Configuration.getMagazinesDirectory(this) + File.separator + name);
+        result = magazineDir.exists() && magazineDir.isDirectory();
 
         if (result) {
             result = (new File(magazineDir.getPath() + File.separator + this.getString(R.string.book)))
                     .exists();
         }
 
-		return result;
-	}
+        return result;
+    }
 
     private boolean magazineZipExists(final String name) {
         boolean result = false;
@@ -521,17 +542,21 @@ public class GindActivity extends Activity implements GindMandator {
     /**
      * Since the only file that is downloaded on this activity is the
      * shelf.json we don't need to show the user any progress right now.
+     *
      * @param taskId
      * @param progress
      */
-    public void updateProgress(final int taskId, Long... progress){};
+    public void updateProgress(final int taskId, Long... progress) {
+    }
+
+    ;
 
     /**
      * This will manage all the task post execute actions
      *
      * @param taskId the id of the task that concluded its work
      */
-    public void postExecute(final int taskId, String... params){
+    public void postExecute(final int taskId, String... params) {
         switch (taskId) {
             //The download of the shelf file has concluded
             case DOWNLOAD_SHELF_FILE:

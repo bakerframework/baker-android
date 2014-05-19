@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="11"
-        android:targetSdkVersion="17" />
+        android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -22,12 +22,14 @@
 
     <uses-permission android:name="com.baker.abaker.permission.C2D_MESSAGE" />
 
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:windowSoftInputMode="adjustPan" >
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -35,17 +37,36 @@
         <activity
             android:name="com.baker.abaker.GindActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:theme="@style/custom_actionbar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name="com.baker.abaker.MagazineActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName="com.baker.abaker.GindActivity" >
+            android:parentActivityName="com.baker.abaker.GindActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.baker.abaker.GindActivity" />
+        </activity>
+        <activity
+            android:name="com.baker.abaker.InfoActivity"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName="com.baker.abaker.GindActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.baker.abaker.GindActivity" />
+        </activity>
+        <activity
+            android:name="com.baker.abaker.settings.SettingsActivity"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName="com.baker.abaker.GindActivity"
+            android:theme="@style/custom_actionbar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.baker.abaker.GindActivity" />
@@ -54,7 +75,7 @@
             android:name="com.baker.abaker.ModalActivity"
             android:configChanges="orientation|screenSize"
             android:parentActivityName="com.baker.abaker.MagazineActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.baker.abaker.MagazineActivity" />

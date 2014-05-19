@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.baker.abaker.Configuration;
+import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.client.GindMandator;
 
 import java.io.BufferedInputStream;

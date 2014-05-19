@@ -44,7 +44,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.baker.abaker.Configuration;
+import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.GindActivity;
 import com.baker.abaker.R;
 import com.baker.abaker.client.GindMandator;

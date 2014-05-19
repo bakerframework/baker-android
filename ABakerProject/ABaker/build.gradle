@@ -3,11 +3,11 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.9.+'
+        classpath 'com.android.tools.build:gradle:0.10.+'
     }
 }
 
-apply plugin: 'android-library'
+apply plugin: 'android'
 apply plugin: 'maven'
 
 version '1.1'
@@ -15,15 +15,20 @@ group 'com.baker'
 
 repositories {
     mavenCentral()
+    maven { url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+    }
 }
 
 android {
-    compileSdkVersion 17
-    buildToolsVersion "19.0.1"
+    compileSdkVersion 19
+    buildToolsVersion "19.0.3"
 
     defaultConfig {
         minSdkVersion 11
-        targetSdkVersion 17
+        targetSdkVersion 19
+
+        testPackageName "com.baker.abaker.test"
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
     }
 }
 
@@ -39,5 +44,4 @@ task install(dependsOn: uploadArchives)
 
 dependencies {
     compile 'com.google.android.gms:play-services:4.1.32'
-    compile 'com.android.support:appcompat-v7:+'
 }

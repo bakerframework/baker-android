@@ -42,7 +42,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
-import com.baker.abaker.Configuration;
+import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.MagazineActivity;
 import com.baker.abaker.R;
 

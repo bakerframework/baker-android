@@ -52,6 +52,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.baker.abaker.model.BookJson;
+import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.views.CustomWebView;
 import com.baker.abaker.views.CustomWebViewPager;
 import com.baker.abaker.views.WebViewFragment;

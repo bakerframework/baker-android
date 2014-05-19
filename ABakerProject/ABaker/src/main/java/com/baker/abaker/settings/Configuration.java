@@ -25,7 +25,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **/
-package com.baker.abaker;
+package com.baker.abaker.settings;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -55,6 +55,21 @@ public class Configuration {
      * Sets the name of the cache folder to be used by the application.
      */
     public static final String MAGAZINES_FILES_DIR = "magazines";
+
+    /**
+     * Key of the setting to receive notification.
+     */
+    public static final String PREF_RECEIVE_NOTIFICATIONS = "pref_receive_notifications";
+
+    /**
+     * Key of the setting to receive automatic downloads notifications.
+     */
+    public static final String PREF_RECEIVE_NOTIFICATIONS_DOWNLOAD = "pref_receive_notifications_download";
+
+    /**
+     * Key of the setting to download content only on Wi-Fi.
+     */
+    public static final String PREF_RECEIVE_NOTIFICATIONS_DOWNLOAD_ONLY_WIFI = "pref_receive_notifications_download_only_wifi";
 
     /**
      * Empty constructor not to be used since the class is utils only.
@@ -116,6 +131,13 @@ public class Configuration {
             cachePath = context.getCacheDir().getPath();
         }
         return cachePath;
+    }
+
+    public static boolean connectionIsWiFi(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        return networkInfo.isConnected();
     }
 	
 	public static boolean hasNetworkConnection(Context context) {

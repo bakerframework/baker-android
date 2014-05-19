@@ -31,30 +31,25 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 
-public class ModalActivity extends Activity {
-
-    private int orientation;
+public class InfoActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_modal);
+        setContentView(R.layout.activity_info);
 
         // Here we allow the user to rotate the screen.
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 
         Intent intent = getIntent();
         String url = intent.getStringExtra(MagazineActivity.MODAL_URL);
-        orientation = intent.getIntExtra(MagazineActivity.ORIENTATION, ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 
-        WebView webView = (WebView) this.findViewById(R.id.modalWebView);
+        WebView webView = (WebView) this.findViewById(R.id.infoWebView);
         webView.getSettings().setJavaScriptEnabled(true);
         //Set zoom enabled/disabled
         webView.getSettings().setSupportZoom(true);
@@ -79,22 +74,7 @@ public class ModalActivity extends Activity {
 
     @Override
     public void onStop() {
-        // We set back the orientation to what we received when this activity was created.
-        this.setRequestedOrientation(orientation);
         super.onStop();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return super.onOptionsItemSelected(item);
     }
 
 }

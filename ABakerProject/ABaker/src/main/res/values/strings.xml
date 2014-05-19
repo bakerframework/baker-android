@@ -48,9 +48,11 @@
     <!-- General strings for the UI -->
     <string name="app_name">Baker Android</string>
     <string name="action_settings">Settings</string>
+    <string name="action_info">Info</string>
     <string name="headerUrl">file:///android_asset/header.html</string>
     <string name="loadingUrl">file:///android_asset/loading.html</string>
     <string name="backgroundUrl">file:///android_asset/background.html</string>
+    <string name="infoUrl">file:///android_asset/info.html</string>
     <string name="inputDateFormat">yyyy-MM-dd hh:mm:ss</string>
     <string name="outputDateFormat">dd MMM yyyy</string>
     <string name="download">Download</string>
@@ -70,5 +72,14 @@
     <string name="check_internet_with_host">http://google.com</string>
     <!-- The time in milliseconds before considering the host is unreachable and no internet access. -->
     <integer name="check_internet_timeout">15000</integer>
+
+    <!-- Strings for the preferences -->
+    <string name="pref_notifications_title">Notifications</string>
+    <string name="pref_receive_notifications">Enable notifications</string>
+    <string name="pref_receive_notifications_summary">Enable to receive content and messages from the cloud</string>
+    <string name="pref_receive_notifications_download">Enable automatic downloads</string>
+    <string name="pref_receive_notifications_download_summary">Automatically download new content when available</string>
+    <string name="pref_receive_notifications_download_only_wifi">Only Wi-Fi</string>
+    <string name="pref_receive_notifications_download_only_wifi_summary">Download the new content only when a Wi-Fi network is available</string>
 
 </resources>
