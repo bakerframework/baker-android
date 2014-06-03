@@ -169,6 +169,8 @@ public class GindActivity extends Activity implements GindMandator {
                 gcm = GoogleCloudMessaging.getInstance(this);
                 registrationId = getRegistrationId(this.getApplicationContext());
 
+                //this.storeRegistrationId(this.getApplicationContext(), registrationId);
+
                 Log.d(this.getClass().getName(), "Obtained registration ID: " + registrationId);
 
                 registerInBackground();
@@ -199,18 +201,19 @@ public class GindActivity extends Activity implements GindMandator {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_info:
-                Intent intent = new Intent(this, InfoActivity.class);
-                intent.putExtra(MagazineActivity.MODAL_URL, getString(R.string.infoUrl));
-                startActivity(intent);
-                return true;
-            case R.id.action_settings:
-                Intent settingsIntent = new Intent(this, SettingsActivity.class);
-                startActivity(settingsIntent);
-                return true;
-            default:
-                return super.onContextItemSelected(item);
+        final int itemId = item.getItemId();
+
+        if (itemId == R.id.action_info) {
+            Intent intent = new Intent(this, InfoActivity.class);
+            intent.putExtra(MagazineActivity.MODAL_URL, getString(R.string.infoUrl));
+            startActivity(intent);
+            return true;
+        } else if (itemId == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+            return true;
+        } else {
+            return super.onContextItemSelected(item);
         }
     }
 

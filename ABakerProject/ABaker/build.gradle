@@ -7,7 +7,7 @@ buildscript {
     }
 }
 
-apply plugin: 'android'
+apply plugin: 'android-library'
 apply plugin: 'maven'
 
 version '1.1'
