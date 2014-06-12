@@ -31,6 +31,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,10 +59,17 @@ import com.baker.abaker.views.CustomWebViewPager;
 import com.baker.abaker.views.WebViewFragment;
 import com.baker.abaker.views.WebViewFragmentPagerAdapter;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MagazineActivity extends FragmentActivity {
@@ -77,6 +85,14 @@ public class MagazineActivity extends FragmentActivity {
     public final static String ORIENTATION = "com.giniem.gindpubs.ORIENTATION";
     private final String LANDSCAPE = "LANDSCAPE";
     private final String PORTRAIT = "PORTRAIT";
+
+    private Resources resources;
+
+    private int previousIndex = -1;
+    private Long startedTime = 0L;
+    private boolean hasElapsedTime = false;
+    private String metaBakerPageName = "";
+    private String metaBakerPageCategory = "";
 
     private String orientation;
 
@@ -131,6 +147,8 @@ public class MagazineActivity extends FragmentActivity {
 			Toast.makeText(this, "Not valid book.json found!",
 					Toast.LENGTH_LONG).show();
 		}
+
+        resources = getResources();
 	}
 
     private void setOrientation(String _orientation) {
@@ -185,6 +203,37 @@ public class MagazineActivity extends FragmentActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
+    private Map<String, String> getBakerMetaTags(final String htmlPath) {
+        Map<String, String> values = new HashMap<String, String>();
+
+        Log.d(this.getClass().getName(), "Trying to parse: " + htmlPath);
+        try {
+            URL url = new URL(htmlPath);
+            File file = new File(url.getPath());
+            Document document = Jsoup.parse(file, null);
+            Elements metas = document.select("meta");
+            for (Element meta : metas) {
+                if (meta.hasAttr("name") && meta.attr("name").equals("baker-page-name")) {
+                    if (meta.hasAttr("content")) {
+                        values.put("baker-page-name", meta.attr("content"));
+                    } else {
+                        values.put("baker-page-name", "");
+                    }
+                } else if (meta.hasAttr("name") && meta.attr("name").equals("baker-page-category")) {
+                    if (meta.hasAttr("content")) {
+                        values.put("baker-page-category", meta.attr("content"));
+                    } else {
+                        values.put("baker-page-category", "");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            Log.e(this.getClass().getName(), "Error parsing the document", e);
+        }
+
+        return values;
+    }
+
 	@SuppressLint("SetJavaScriptEnabled")
 	private void setPagerView(final BookJson book) {
 
@@ -192,20 +241,70 @@ public class MagazineActivity extends FragmentActivity {
         if (book.getLiveUrl() != null) {
             path = book.getLiveUrl();
         }
+        final String finalPath = path;
 
-        Log.d(this.getClass().toString(), "THE PATH FOR LOADING THE PAGES WILL BE: " + path);
+        Log.d(this.getClass().toString(), "THE PATH FOR LOADING THE PAGES WILL BE: " + finalPath);
 
 		// ViewPager and its adapters use support library
 		// fragments, so use getSupportFragmentManager.
 		webViewPagerAdapter = new WebViewFragmentPagerAdapter(
-				getSupportFragmentManager(), book, path, this);
+				getSupportFragmentManager(), book, finalPath, this);
 		pager = (CustomWebViewPager) findViewById(R.id.pager);
 		pager.setAdapter(webViewPagerAdapter);
         pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
-                Log.d(this.getClass().getName(), "Loading page at: " + position);
+
+                if (hasElapsedTime) {
+                    Long timeElapsed = System.currentTimeMillis() - startedTime;
+                    if (timeElapsed > resources.getInteger(R.integer.ga_page_view_time_elapsed))
+                    ((ABakerApp)MagazineActivity.this.getApplication()).sendTimingEvent(
+                            metaBakerPageCategory,
+                            timeElapsed,
+                            getString(R.string.issue_page_view),
+                            metaBakerPageName);
+
+                    ((ABakerApp)MagazineActivity.this.getApplication()).sendEvent(
+                            metaBakerPageCategory,
+                            getString(R.string.issue_page_view),
+                            metaBakerPageName);
+
+                    startedTime = 0L;
+                    hasElapsedTime = false;
+                    previousIndex = -1;
+                    metaBakerPageName = "";
+                    metaBakerPageCategory = "";
+                }
+
+                Log.d(this.getClass().getName(), "Loading page at index: " + position);
+
+                if (resources.getBoolean(R.bool.ga_enable) && resources.getBoolean(R.bool.ga_register_page_view_event)) {
+
+                    String page = finalPath + book.getMagazineName() + File.separator + book.getContents().get(position);
+                    Map<String, String> tags = getBakerMetaTags(page);
+
+                    if (tags.containsKey("baker-page-name")) {
+                        String name = tags.get("baker-page-name");
+                        String category = tags.containsKey("baker-page-category") ? tags.get("baker-page-category") : getString(R.string.issues_category);
+
+                        name = (name.isEmpty()) ? book.getContents().get(position) : name;
+                        category = (category.isEmpty()) ? getString(R.string.issues_category) : category;
+
+                        if (resources.getBoolean(R.bool.ga_register_page_view_time_elapsed_event)) {
+                            startedTime = System.currentTimeMillis();
+                            hasElapsedTime = true;
+                            previousIndex = position;
+                            metaBakerPageName = name;
+                            metaBakerPageCategory = category;
+                        } else {
+                            ((ABakerApp)MagazineActivity.this.getApplication()).sendEvent(
+                                    category,
+                                    getString(R.string.issue_page_view),
+                                    name);
+                        }
+                    }
+                }
             }
         });
 

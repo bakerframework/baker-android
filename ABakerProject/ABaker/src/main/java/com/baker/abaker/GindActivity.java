@@ -40,6 +40,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -122,6 +123,17 @@ public class GindActivity extends Activity implements GindMandator {
 
     private boolean isLoading = true;
 
+    private GLSurfaceView mGLView;
+
+    static {
+        try {
+            System.loadLibrary("JavaScriptCore");
+            System.loadLibrary("ejecta");
+        } catch (UnsatisfiedLinkError ex) {
+            Log.e(GindActivity.class.getName(), "Could not load libraries: " + ex.getMessage());
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,7 +152,6 @@ public class GindActivity extends Activity implements GindMandator {
         }
 
         try {
-
             //Getting the user main account
             AccountManager manager = AccountManager.get(this);
             Account[] accounts = manager.getAccountsByType("com.google");
@@ -178,6 +189,15 @@ public class GindActivity extends Activity implements GindMandator {
 
             CheckInternetTask checkInternetTask = new CheckInternetTask(this, this, CHECK_INTERNET_TASK);
             checkInternetTask.execute();
+
+            // Here we register the APP OPEN event on Google Analytics
+            if (getResources().getBoolean(R.bool.ga_enable) && getResources().getBoolean(R.bool.ga_register_app_open_event)) {
+                ((ABakerApp)this.getApplication()).sendEvent(
+                        getString(R.string.application_category),
+                        getString(R.string.application_open),
+                        getString(R.string.application_open_label));
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             Log.e(this.getClass().getName(), "Cannot load configuration.");
@@ -199,18 +219,19 @@ public class GindActivity extends Activity implements GindMandator {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_info:
-                Intent intent = new Intent(this, InfoActivity.class);
-                intent.putExtra(MagazineActivity.MODAL_URL, getString(R.string.infoUrl));
-                startActivity(intent);
-                return true;
-            case R.id.action_settings:
-                Intent settingsIntent = new Intent(this, SettingsActivity.class);
-                startActivity(settingsIntent);
-                return true;
-            default:
-                return super.onContextItemSelected(item);
+        final int itemId = item.getItemId();
+
+        if (itemId == R.id.action_info) {
+            Intent intent = new Intent(this, InfoActivity.class);
+            intent.putExtra(MagazineActivity.MODAL_URL, getString(R.string.infoUrl));
+            startActivity(intent);
+            return true;
+        } else if (itemId == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+            return true;
+        } else {
+            return super.onContextItemSelected(item);
         }
     }
 
@@ -257,7 +278,7 @@ public class GindActivity extends Activity implements GindMandator {
             Log.d(this.getClass().toString(), "NO INTERNET ACCESS, WON'T CREATE BACKUP SHELF.");
         }
 
-        if (hasInternetAccess && useBackup == false) {
+        if (hasInternetAccess && !useBackup) {
             // We get the shelf json asynchronously.
             DownloaderTask downloadShelf = new DownloaderTask(
                     this.getApplicationContext(),

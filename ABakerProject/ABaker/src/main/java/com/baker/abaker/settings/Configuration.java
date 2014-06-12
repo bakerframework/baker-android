@@ -72,6 +72,11 @@ public class Configuration {
     public static final String PREF_RECEIVE_NOTIFICATIONS_DOWNLOAD_ONLY_WIFI = "pref_receive_notifications_download_only_wifi";
 
     /**
+     * Key of the setting to enable Google Analytics.
+     */
+    public static final String PREF_ENABLE_ANALYTICS = "pref_enable_analytics";
+
+    /**
      * Empty constructor not to be used since the class is utils only.
      */
 	private Configuration() {}
@@ -210,7 +215,7 @@ public class Configuration {
 
     public static String readFile(File file) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
-        String line = null;
+        String line;
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");
 

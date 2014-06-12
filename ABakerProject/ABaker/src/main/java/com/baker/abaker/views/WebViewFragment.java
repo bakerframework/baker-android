@@ -42,9 +42,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
-import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.MagazineActivity;
 import com.baker.abaker.R;
+import com.baker.abaker.settings.Configuration;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -173,6 +173,7 @@ public class WebViewFragment extends Fragment {
                 return true;
             }
         });
+
         webView.loadUrl(args.getString(ARG_OBJECT));
 
 		return rootView;

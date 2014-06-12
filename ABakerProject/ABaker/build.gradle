@@ -21,7 +21,7 @@ repositories {
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.3"
+    buildToolsVersion "19.1.0"
 
     defaultConfig {
         minSdkVersion 11
@@ -43,5 +43,6 @@ uploadArchives {
 task install(dependsOn: uploadArchives)
 
 dependencies {
-    compile 'com.google.android.gms:play-services:4.1.32'
+    compile 'com.google.android.gms:play-services:4.4.52'
+    compile 'org.jsoup:jsoup:1.7.3'
 }

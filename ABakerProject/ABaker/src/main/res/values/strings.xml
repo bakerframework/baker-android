@@ -82,4 +82,18 @@
     <string name="pref_receive_notifications_download_only_wifi">Only Wi-Fi</string>
     <string name="pref_receive_notifications_download_only_wifi_summary">Download the new content only when a Wi-Fi network is available</string>
 
+    <string name="pref_google_analytics_title">Google Analytics</string>
+    <string name="pref_enable_analytics">Enable Google Analytics</string>
+    <string name="pref_enable_analytics_summary">Send usage data to Google Analytics</string>
+    
+    <!--Strings for the Google Analytics events-->
+    <string name="issues_category">Issues</string>
+    <string name="issue_open">Issue Open</string>
+    <string name="issue_download">Issue Download</string>
+    <string name="issue_delete">Issue Delete</string>
+    <string name="issue_page_view">Issue Page Open</string>
+
+    <string name="application_category">Application</string>
+    <string name="application_open">Application Open</string>
+    <string name="application_open_label">Application Opened</string>
 </resources>

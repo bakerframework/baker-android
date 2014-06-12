@@ -27,13 +27,13 @@
  **/
 package com.baker.abaker.views;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.util.Log;
 
+import com.baker.abaker.MagazineActivity;
 import com.baker.abaker.model.BookJson;
 
 import java.io.File;
@@ -44,16 +44,16 @@ public class WebViewFragmentPagerAdapter extends FragmentStatePagerAdapter {
 
 	private String magazinePath;
 
-    private Context context;
+    private MagazineActivity magazineActivity;
 	
 	public WebViewFragmentPagerAdapter(FragmentManager fm) {
 		super(fm);
 	}
 
 	public WebViewFragmentPagerAdapter(FragmentManager fm, BookJson book,
-			final String magazinePath, Context context) {
+			final String magazinePath, MagazineActivity _magazineActivity) {
 		super(fm);
-        this.context = context;
+        this.magazineActivity = _magazineActivity;
 		if (null == book) {
 			this.book = new BookJson();
 		} else {
@@ -75,7 +75,9 @@ public class WebViewFragmentPagerAdapter extends FragmentStatePagerAdapter {
         Log.d(this.getClass().getName(), "Loading page " + page);
         args.putString(WebViewFragment.ARG_OBJECT, page);
 
-        return Fragment.instantiate(context, WebViewFragment.class.getName(), args);
+        Fragment fragment = Fragment.instantiate(magazineActivity, WebViewFragment.class.getName(), args);
+
+        return fragment;
 	}
 
 	@Override

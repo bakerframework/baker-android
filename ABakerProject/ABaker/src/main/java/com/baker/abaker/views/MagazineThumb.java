@@ -27,6 +27,7 @@
  **/
 package com.baker.abaker.views;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
@@ -44,6 +45,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baker.abaker.ABakerApp;
 import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.GindActivity;
 import com.baker.abaker.R;
@@ -111,7 +113,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private final int MAGAZINE_DELETE_TASK = 3;
     private final int POST_DOWNLOAD_TASK = 4;
 
-    private Context context;
+    private Activity activity;
 
     /**
      * Set to true when the user uses the Preview button rather than downloding the package.
@@ -119,24 +121,24 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private boolean previewLoaded = false;
 
     /**
-     * Creates an instance of MagazineThumb to with an activity context.
+     * Creates an instance of MagazineThumb to with an activity activity.
      *
-     * @param context the parent Activity context.
+     * @param _activity the parent Activity.
      */
-    public MagazineThumb(Context context, Magazine mag) {
-        super(context);
+    public MagazineThumb(Activity _activity, Magazine mag) {
+        super(_activity);
 
-        this.context = context;
+        this.activity = _activity;
 
         //Paths to the application files
-        magazinesDirectory = Configuration.getMagazinesDirectory(context);
-        cachePath = Configuration.getCacheDirectory(context);
+        magazinesDirectory = Configuration.getMagazinesDirectory(_activity);
+        cachePath = Configuration.getCacheDirectory(_activity);
 
         //Set the magazine model to the thumb instance.
         this.magazine = mag;
 
         //Thumbnail downloader task initialization.
-        thumbDownloader = new DownloaderTask(context,
+        thumbDownloader = new DownloaderTask(_activity,
                 this,
                 this.THUMB_DOWNLOAD_TASK,
                 this.magazine.getCover(),
@@ -145,18 +147,18 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                 "File to show on the shelf",
                 cachePath,
                 this.THUMB_DOWNLOAD_VISIBILITY);
-        packDownloader = new DownloaderTask(this.context,
+        packDownloader = new DownloaderTask(this.activity,
                 this,
                 this.MAGAZINE_DOWNLOAD_TASK,
                 this.magazine.getUrl(),
-                this.magazine.getName() + context.getString(R.string.package_extension),
+                this.magazine.getName() + _activity.getString(R.string.package_extension),
                 this.magazine.getTitle(),
                 this.magazine.getInfo(),
                 this.magazinesDirectory,
                 this.MAGAZINE_DOWNLOAD_VISIBILITY);
 
         //Unzipper task initialization
-        unzipperTask = new UnzipperTask(context, this, UNZIP_MAGAZINE_TASK);
+        unzipperTask = new UnzipperTask(_activity, this, UNZIP_MAGAZINE_TASK);
 
         //Logging initialization
         Log.d(this.getClass().getName(), "Magazines relative dir: " + magazinesDirectory);
@@ -284,6 +286,14 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             findViewById(R.id.download_container).setVisibility(View.VISIBLE);
             findViewById(R.id.txtProgress).setVisibility(View.GONE);
         }
+
+        // Here we register the OPEN ISSUE event on Google Analytics
+        if (this.activity.getResources().getBoolean(R.bool.ga_enable) && this.activity.getResources().getBoolean(R.bool.ga_register_issue_read_event)) {
+            ((ABakerApp)this.activity.getApplication()).sendEvent(
+                    this.activity.getString(R.string.issues_category),
+                    this.activity.getString(R.string.issue_open),
+                    this.magazine.getName());
+        }
     }
 
     public Magazine getMagazine() {
@@ -355,11 +365,11 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         if (null == this.packDownloader) {
 
             //Package downloader task initialization.
-            packDownloader = new DownloaderTask(this.context,
+            packDownloader = new DownloaderTask(this.activity,
                     this,
                     this.MAGAZINE_DOWNLOAD_TASK,
                     this.magazine.getUrl(),
-                    this.magazine.getName() + context.getString(R.string.package_extension),
+                    this.magazine.getName() + activity.getString(R.string.package_extension),
                     this.magazine.getTitle(),
                     this.magazine.getInfo(),
                     this.magazinesDirectory,
@@ -393,7 +403,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
 
         //Make sure the unzipper gets initialized
         if (null == this.unzipperTask) {
-            this.unzipperTask = new UnzipperTask(context, this, UNZIP_MAGAZINE_TASK);
+            this.unzipperTask = new UnzipperTask(activity, this, UNZIP_MAGAZINE_TASK);
         }
 
         findViewById(R.id.download_container).setVisibility(View.GONE);
@@ -432,7 +442,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private void sendDownloadReport() {
         postClientTask = new PostClientTask(POST_DOWNLOAD_TASK, this);
 
-        String url = this.context.getString(R.string.download_report_url);
+        String url = this.activity.getString(R.string.download_report_url);
         url = url.replace(":issue_id", this.getMagazine().getName());
         url = url.replace(":device_type", "ANDROID");
         url = url.replace(":user_id", GindActivity.userAccount);
@@ -484,13 +494,21 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             case MAGAZINE_DOWNLOAD_TASK:
                 this.packDownloader = null;
                 //When the download task ended successfully we will start unzipping the file.
-                if (results[0] == "SUCCESS") {
+                if (results[0].equals("SUCCESS")) {
+                    // Here we register the DOWNLOAD ISSUE event on Google Analytics
+                    if (this.activity.getResources().getBoolean(R.bool.ga_enable) && this.activity.getResources().getBoolean(R.bool.ga_register_issue_download_event)) {
+                        ((ABakerApp)this.activity.getApplication()).sendEvent(
+                                this.activity.getString(R.string.issues_category),
+                                this.activity.getString(R.string.issue_download),
+                                this.magazine.getName());
+                    }
+
                     startUnzip(results[1], this.magazine.getName());
                 }
                 break;
             case THUMB_DOWNLOAD_TASK:
                 //If the thumbnail download ended successfully we will render the cover.
-                if (results[0] == "SUCCESS") {
+                if (results[0].equals("SUCCESS")) {
                     this.renderCover(Configuration.getCacheDirectory(
                             this.getContext()) + File.separator + this.magazine.getName());
                 }
@@ -499,7 +517,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                 //If the Unzip tasks ended successfully we will update the UI to let the user
                 //start reading the issue.
                 this.unzipperTask = null;
-                if (results[0] == "SUCCESS") {
+                if (results[0].equals("SUCCESS")) {
                     this.enableReadArchiveActions();
                     this.sendDownloadReport();
                 } else {
@@ -510,12 +528,20 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             case MAGAZINE_DELETE_TASK:
                 //If the issue files were deleted successfully the UI will be updated to let
                 //the user download the issue again.
-                if (results[0] == "SUCCESS") {
+                if (results[0].equals("SUCCESS")) {
+                    // Here we register the DELETE ISSUE event on Google Analytics
+                    if (this.activity.getResources().getBoolean(R.bool.ga_enable) && this.activity.getResources().getBoolean(R.bool.ga_register_issue_delete_event)) {
+                        ((ABakerApp)this.activity.getApplication()).sendEvent(
+                                this.activity.getString(R.string.issues_category),
+                                this.activity.getString(R.string.issue_delete),
+                                this.magazine.getName());
+                    }
+
                     this.enableDownloadAction();
                 }
                 break;
             case POST_DOWNLOAD_TASK:
-                if (results[0] != "ERROR") {
+                if (!results[0].equals("ERROR")) {
                 }
                 break;
         }
