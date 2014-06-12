@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <integer name="ga_sessionTimeout">300</integer>
+
+    <!-- Enable automatic Activity measurement -->
+    <bool name="ga_autoActivityTracking">true</bool>
+
+    <!-- Screen names on the reports -->
+    <screenName name="com.google.android.gms.analytics.samples.mobileplayground.ScreenviewFragment">
+        ABaker ScreenView
+    </screenName>
+    <screenName name="com.google.android.gms.analytics.samples.mobileplayground.EcommerceFragment">
+        ABaker EcommerceView
+    </screenName>
+
+    <!--  Tracking ID -->
+    <string name="ga_trackingId">UA-XXXXXXXX-X</string>
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Enable the Google Analytics -->
+    <bool name="ga_enable">true</bool>
+
+    <!-- Sent the event when the user opens the application -->
+    <bool name="ga_register_app_open_event">false</bool>
+
+    <!-- Send the event when the user downloads an issue -->
+    <bool name="ga_register_issue_download_event">false</bool>
+
+    <!-- Send the event when the user reads an issue -->
+    <bool name="ga_register_issue_read_event">false</bool>
+
+    <!-- Send the event when the user deletes an issue -->
+    <bool name="ga_register_issue_delete_event">false</bool>
+
+    <!-- Send event to Google Analytics every time any page is viewed.
+    If false no page view event will be registered.
+    If true, those pages that have the baker-page-name meta tag will be registered. -->
+    <bool name="ga_register_page_view_event">true</bool>
+
+    <!-- Send event to Google Analytics every time a page is viewed for an amount of time.
+    If false, the page view event will be registered immediately after being opened.
+    If true, the page view event will be registered only after a certain amount of time has elapsed.
+    See the 'ga_page_view_time_elapsed' property.
+     -->
+    <bool name="ga_register_page_view_time_elapsed_event">true</bool>
+
+    <!-- Time in milliseconds elapsed since the page was opened to register the event of a page view -->
+    <integer name="ga_page_view_time_elapsed">3000</integer>
+</resources>
