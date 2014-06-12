@@ -180,6 +180,8 @@ public class GindActivity extends Activity implements GindMandator {
                 gcm = GoogleCloudMessaging.getInstance(this);
                 registrationId = getRegistrationId(this.getApplicationContext());
 
+                //this.storeRegistrationId(this.getApplicationContext(), registrationId);
+
                 Log.d(this.getClass().getName(), "Obtained registration ID: " + registrationId);
 
                 registerInBackground();
