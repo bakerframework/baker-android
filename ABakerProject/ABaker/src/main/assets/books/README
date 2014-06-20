@@ -1,0 +1,3 @@
+Place your issues in this directory if you want ABaker to run as standalone. Also, enable the standalone mode in "res/values/booleans.xml".
+
+Each directory placed here will be considered an issue if it contains a book.json file.

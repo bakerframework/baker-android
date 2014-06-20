@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <permission
         android:name="com.baker.abaker.permission.C2D_MESSAGE"
@@ -32,7 +33,8 @@
         android:windowSoftInputMode="adjustPan"
         android:vmSafeMode="true"
         android:allowClearUserData="true"
-        android:name=".ABakerApp">
+        android:name="com.baker.abaker.ABakerApp"
+        android:debuggable="false" >
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />

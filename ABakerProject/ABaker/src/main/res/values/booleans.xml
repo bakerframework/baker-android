@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Set to true if you want ABaker to run as standalone app, loading the issues files from "assets/books"-->
+    <bool name="run_as_standalone">false</bool>
+</resources>

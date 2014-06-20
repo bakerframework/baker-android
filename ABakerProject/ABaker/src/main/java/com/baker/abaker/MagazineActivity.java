@@ -96,6 +96,9 @@ public class MagazineActivity extends FragmentActivity {
 
     private String orientation;
 
+    private boolean STANDALONE_MODE = false;
+    private boolean RETURN_TO_SHELF = false;
+
     public BookJson getJsonBook() {
         return this.jsonBook;
     }
@@ -106,10 +109,11 @@ public class MagazineActivity extends FragmentActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        Log.d(this.getClass().getName(), "Called onDestroy method.");
 
         WebViewFragment fragment = (WebViewFragment) webViewPagerAdapter.instantiateItem(pager, pager.getCurrentItem());
         fragment.getWebView().destroy();
+        super.onDestroy();
     }
 
 	@Override
@@ -131,6 +135,16 @@ public class MagazineActivity extends FragmentActivity {
 		Intent intent = getIntent();
 
 		try {
+            STANDALONE_MODE = intent.getBooleanExtra(GindActivity.MAGAZINE_STANDALONE, false);
+            RETURN_TO_SHELF = intent.getBooleanExtra(GindActivity.MAGAZINE_RETURN_TO_SHELF, true);
+
+            Log.d(this.getClass().getName(), "Will run in standalone mode: " + STANDALONE_MODE);
+            if (!RETURN_TO_SHELF) {
+                setResult(GindActivity.STANDALONE_MAGAZINE_ACTIVITY_FINISH);
+            } else {
+                setResult(0);
+            }
+
 			jsonBook = new BookJson();
             jsonBook.setMagazineName(intent
 					.getStringExtra(GindActivity.MAGAZINE_NAME));
@@ -238,6 +252,12 @@ public class MagazineActivity extends FragmentActivity {
 	private void setPagerView(final BookJson book) {
 
         String path = "file://" + Configuration.getMagazinesDirectory(this) + File.separator;
+
+        if (STANDALONE_MODE) {
+            path = "file:///android_asset".concat(File.separator)
+                    .concat(getString(R.string.sa_books_directory)).concat(File.separator);
+        }
+
         if (book.getLiveUrl() != null) {
             path = book.getLiveUrl();
         }

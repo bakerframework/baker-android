@@ -53,7 +53,7 @@
     <string name="loadingUrl">file:///android_asset/loading.html</string>
     <string name="backgroundUrl">file:///android_asset/background.html</string>
     <string name="infoUrl">file:///android_asset/info.html</string>
-    <string name="inputDateFormat">yyyy-MM-dd hh:mm:ss</string>
+    <string name="inputDateFormat">yyyy-MM-dd</string>
     <string name="outputDateFormat">dd MMM yyyy</string>
     <string name="download">Download</string>
     <string name="preview">Preview</string>
@@ -91,9 +91,13 @@
     <string name="issue_open">Issue Open</string>
     <string name="issue_download">Issue Download</string>
     <string name="issue_delete">Issue Delete</string>
-    <string name="issue_page_view">Issue Page Open</string>
+    <string name="issue_page_view">Issue Page View</string>
 
     <string name="application_category">Application</string>
     <string name="application_open">Application Open</string>
     <string name="application_open_label">Application Opened</string>
+
+    <!-- Strings for the standalone mode -->
+    <string name="sa_books_directory">books</string>
+    <string name="sa_no_issues">No issues found.</string>
 </resources>

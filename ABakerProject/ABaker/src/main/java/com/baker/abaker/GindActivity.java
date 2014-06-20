@@ -39,6 +39,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -63,6 +64,7 @@ import com.baker.abaker.settings.Configuration;
 import com.baker.abaker.settings.SettingsActivity;
 import com.baker.abaker.views.FlowLayout;
 import com.baker.abaker.views.MagazineThumb;
+import com.baker.abaker.workers.BookJsonParserTask;
 import com.baker.abaker.workers.CheckInternetTask;
 import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.GCMRegistrationWorker;
@@ -74,9 +76,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,11 +94,17 @@ public class GindActivity extends Activity implements GindMandator {
 
     public final static String BOOK_JSON_KEY = "com.giniem.gindpubs.BOOK_JSON_KEY";
     public final static String MAGAZINE_NAME = "com.giniem.gindpubs.MAGAZINE_NAME";
+    public final static String MAGAZINE_STANDALONE = "com.giniem.gindpubs.STANDALONE";
+    public final static String MAGAZINE_RETURN_TO_SHELF = "com.giniem.gindpubs.MAGAZINE_RETURN_TO_SHELF";
     public static final String PROPERTY_REG_ID = "com.giniem.gindpubs.REGISTRATION_ID";
     public static final String DOWNLOAD_IN_PROGRESS = "com.giniem.gindpubs.DOWNLOAD_ID";
     private static final String PROPERTY_APP_VERSION = "com.giniem.gindpubs.APP_VERSION";
 
-    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    /**
+     * Code used when the MagazineActivity finishes, so we can evaluate if we need to close this
+     * activity as well or not.
+     */
+    public static final int STANDALONE_MAGAZINE_ACTIVITY_FINISH = 1;
 
     //Shelf file download properties
     private final String shelfFileName = "shelf.json";
@@ -106,6 +118,7 @@ public class GindActivity extends Activity implements GindMandator {
     private final int DOWNLOAD_SHELF_FILE = 0;
     private final int REGISTRATION_TASK = 1;
     private final int CHECK_INTERNET_TASK = 2;
+    private final int BOOK_JSON_PARSE_TASK = 3;
 
     // For Google Cloud Messaging
     private GoogleCloudMessaging gcm;
@@ -122,6 +135,16 @@ public class GindActivity extends Activity implements GindMandator {
     public static String userAccount = "";
 
     private boolean isLoading = true;
+
+    /**
+     * Used when running in standalone mode based on the run_as_standalone setting in booleans.xml.
+     */
+    private boolean STANDALONE_MODE = false;
+    /**
+     * When viewing an issue, if this is true the app will return to the shelf after closing it.
+     * If running in standalone mode and only one issue is present, this will be set to false, causing the app to finish.
+     */
+    private boolean RETURN_TO_SHELF = true;
 
     private GLSurfaceView mGLView;
 
@@ -152,6 +175,8 @@ public class GindActivity extends Activity implements GindMandator {
         }
 
         try {
+            loadingScreen();
+            STANDALONE_MODE = getResources().getBoolean(R.bool.run_as_standalone);
             //Getting the user main account
             AccountManager manager = AccountManager.get(this);
             Account[] accounts = manager.getAccountsByType("com.google");
@@ -174,13 +199,10 @@ public class GindActivity extends Activity implements GindMandator {
             }
             Log.d(this.getClass().getName(), "APP_ID: " + this.getString(R.string.app_id) + ", USER_ID: " + userAccount);
 
-            loadingScreen();
             if (checkPlayServices()) {
                 Log.d(this.getClass().getName(), "Google Play Services enabled.");
                 gcm = GoogleCloudMessaging.getInstance(this);
                 registrationId = getRegistrationId(this.getApplicationContext());
-
-                //this.storeRegistrationId(this.getApplicationContext(), registrationId);
 
                 Log.d(this.getClass().getName(), "Obtained registration ID: " + registrationId);
 
@@ -188,9 +210,12 @@ public class GindActivity extends Activity implements GindMandator {
             } else {
                 Log.e(this.getClass().toString(), "No valid Google Play Services APK found.");
             }
-
-            CheckInternetTask checkInternetTask = new CheckInternetTask(this, this, CHECK_INTERNET_TASK);
-            checkInternetTask.execute();
+            if (STANDALONE_MODE) {
+                activateStandalone();
+            } else {
+                CheckInternetTask checkInternetTask = new CheckInternetTask(this, this, CHECK_INTERNET_TASK);
+                checkInternetTask.execute();
+            }
 
             // Here we register the APP OPEN event on Google Analytics
             if (getResources().getBoolean(R.bool.ga_enable) && getResources().getBoolean(R.bool.ga_register_app_open_event)) {
@@ -235,6 +260,124 @@ public class GindActivity extends Activity implements GindMandator {
         } else {
             return super.onContextItemSelected(item);
         }
+    }
+
+    private void activateStandalone() {
+        ArrayList<String> issues = this.getValidIssuesAssets();
+        Log.d(this.getClass().getName(), "Found " + issues.size() + " issues.");
+        if (issues.size() == 1) {
+            RETURN_TO_SHELF = false;
+            Magazine magazine = new Magazine();
+            magazine.setName(issues.get(0));
+            magazine.setStandalone(STANDALONE_MODE);
+            BookJsonParserTask parser = new BookJsonParserTask(
+                    this,
+                    magazine,
+                    this,
+                    BOOK_JSON_PARSE_TASK);
+            parser.execute("STANDALONE");
+        } else if (issues.size() > 1) {
+            JSONArray jsonArray = new JSONArray();
+            for (String issue : issues) {
+                Log.d(this.getClass().getName(), "The file is: " + issue);
+                jsonArray.put(this.getIssueData(issue));
+            }
+            this.createThumbnails(jsonArray);
+        } else {
+            Log.e(this.getClass().getName(), "Running standalone but no issues were found.");
+            Toast.makeText(this, getString(R.string.sa_no_issues), Toast.LENGTH_LONG).show();
+            this.finish();
+        }
+    }
+
+    private JSONObject getIssueData(final String issueName) {
+        final String books = getString(R.string.sa_books_directory);
+        final String bookJson = "book.json";
+        JSONObject result = new JSONObject();
+
+        BufferedReader reader = null;
+        try {
+            result.put("name", issueName);
+
+            AssetManager assetManager = getAssets();
+
+            String bookJsonPath = books.concat(File.separator)
+                    .concat(issueName).concat(File.separator)
+                    .concat(bookJson);
+            reader = new BufferedReader(new InputStreamReader(assetManager.open(bookJsonPath)));
+
+            String line = "";
+            StringBuilder jsonString = new StringBuilder();
+            do {
+                jsonString.append(line);
+                line = reader.readLine();
+            } while (line != null);
+
+            Log.d(this.getClass().getName(), "The book.json read was: " + jsonString.toString());
+            JSONObject jsonRaw = new JSONObject(jsonString.toString());
+            result.put("title", jsonRaw.getString("title"));
+            result.put("url", jsonRaw.getString("url"));
+            result.put("info", jsonRaw.getString("title"));
+            result.put("cover", jsonRaw.getString("cover"));
+            result.put("date", jsonRaw.getString("date"));
+
+        } catch (JSONException ex) {
+            Log.e(this.getClass().getName(), "Error getting issue information from " + issueName, ex);
+        } catch (IOException ex) {
+            Log.e(this.getClass().getName(), "Error getting issue information from " + issueName, ex);
+        } finally {
+            try {
+                reader.close();
+            } catch (Exception ex) {
+                //
+            }
+        }
+
+        return result;
+    }
+
+    private ArrayList<String> getValidIssuesAssets() {
+        final String path = getString(R.string.sa_books_directory);
+        ArrayList<String> issues = new ArrayList<String>();
+        try {
+            AssetManager assetManager = getAssets();
+            String assetList[] = assetManager.list(path);
+            String fileName;
+            for (String asset : assetList) {
+                fileName = path.concat(File.separator).concat(asset);
+                if (assetManager.list(fileName).length > 0) {
+                    if (this.hasBookJson(fileName)) {
+                        Log.d(this.getClass().getName(), "Valid issue found: " + fileName);
+                        issues.add(asset);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            Log.e(this.getClass().getName(), "Error getting issues from assets", ex);
+        }
+        return issues;
+    }
+
+    private boolean hasBookJson(final String issuePath) {
+        boolean result = false;
+        final String bookJson = "book.json";
+
+        AssetManager assetManager = getAssets();
+        InputStream inputStream = null;
+        try {
+            inputStream = assetManager.open(issuePath.concat(File.separator).concat(bookJson));
+            result = true;
+        } catch (Exception ex) {
+            result = false;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (Exception e) {
+                Log.e(this.getClass().getName(), "Error opening the book.json for " + issuePath);
+            }
+        }
+
+        return result;
     }
 
     public void downloadShelf(final String internetAccess) {
@@ -466,6 +609,7 @@ public class GindActivity extends Activity implements GindMandator {
                 mag.setSize(size);
                 mag.setCover(new String(json.getString("cover").getBytes(encoding), encoding));
                 mag.setUrl(new String(json.getString("url").getBytes(encoding), encoding));
+                mag.setStandalone(STANDALONE_MODE);
 
                 if (json.has("liveUrl")) {
                     String liveUrl = new String(json.getString("liveUrl").getBytes(encoding), encoding);
@@ -479,6 +623,8 @@ public class GindActivity extends Activity implements GindMandator {
                 thumb.init(this, null);
                 if (this.magazineExists(mag.getName())) {
                     thumb.enableReadArchiveActions();
+                } else if (STANDALONE_MODE) {
+                    thumb.enableReadButton();
                 }
 
                 //Add layout
@@ -487,6 +633,7 @@ public class GindActivity extends Activity implements GindMandator {
 
             isLoading = false;
         } catch (Exception e) {
+            Log.e(this.getClass().getName(), "Error loading the shelf elements.", e);
             //TODO: Notify the user about the issue.
             e.printStackTrace();
         }
@@ -497,7 +644,9 @@ public class GindActivity extends Activity implements GindMandator {
         try {
             intent.putExtra(BOOK_JSON_KEY, book.toJSON().toString());
             intent.putExtra(MAGAZINE_NAME, book.getMagazineName());
-            startActivity(intent);
+            intent.putExtra(MAGAZINE_STANDALONE, STANDALONE_MODE);
+            intent.putExtra(MAGAZINE_RETURN_TO_SHELF, RETURN_TO_SHELF);
+            startActivityForResult(intent, STANDALONE_MAGAZINE_ACTIVITY_FINISH);
         } catch (JSONException e) {
             Toast.makeText(this, "The book.json is invalid.",
                     Toast.LENGTH_LONG).show();
@@ -579,13 +728,13 @@ public class GindActivity extends Activity implements GindMandator {
      *
      * @param taskId the id of the task that concluded its work
      */
-    public void postExecute(final int taskId, String... params) {
+    public void postExecute(final int taskId, String... results) {
         switch (taskId) {
             //The download of the shelf file has concluded
             case DOWNLOAD_SHELF_FILE:
                 //Get the results of the download
-                String taskStatus = params[0];
-                String filePath = params[1];
+                String taskStatus = results[0];
+                String filePath = results[1];
 
                 if (taskStatus.equals("SUCCESS")) {
                     this.readShelf(filePath);
@@ -600,16 +749,34 @@ public class GindActivity extends Activity implements GindMandator {
                 }
                 break;
             case REGISTRATION_TASK:
-                if (params[0].equals("SUCCESS")) {
-                    this.registrationId = params[1];
-                    this.storeRegistrationId(this.getApplicationContext(), params[1]);
+                if (results[0].equals("SUCCESS")) {
+                    this.registrationId = results[1];
+                    this.storeRegistrationId(this.getApplicationContext(), results[1]);
                 } else {
                     // Could not create registration ID for GCM services.
                 }
                 break;
             case CHECK_INTERNET_TASK:
                 Log.d(this.getClass().toString(), "FINISHED TESTING INTERNET CONNECTION, CHECKING SHELF...");
-                this.downloadShelf(params[0]);
+                this.downloadShelf(results[0]);
+                break;
+            case BOOK_JSON_PARSE_TASK:
+                try {
+                    BookJson bookJson = new BookJson();
+
+                    final String magazineName = results[0];
+                    final String rawJson = results[1];
+
+                    bookJson.setMagazineName(magazineName);
+                    bookJson.fromJson(rawJson);
+
+                    this.viewMagazine(bookJson);
+                } catch (JSONException ex) {
+                    Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
+                } catch (ParseException ex) {
+                    Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
+                }
+
                 break;
         }
     }
@@ -739,6 +906,14 @@ public class GindActivity extends Activity implements GindMandator {
             }
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(this.getClass().getName(), "MagazineActivity finished, resultCode: " + resultCode);
+        if (resultCode == STANDALONE_MAGAZINE_ACTIVITY_FINISH) {
+            this.finish();
         }
     }
 

@@ -38,6 +38,7 @@ public class Magazine {
     private String url;
     private Integer sizeMB;
     private String liveUrl;
+    private boolean standalone;
 
     public String getName() {
         return name;
@@ -106,4 +107,12 @@ public class Magazine {
     public String getLiveUrl() { return liveUrl; }
 
     public void setLiveUrl(String liveUrl) { this.liveUrl = liveUrl; }
+
+    public boolean isStandalone() {
+        return standalone;
+    }
+
+    public void setStandalone(boolean standalone) {
+        this.standalone = standalone;
+    }
 }

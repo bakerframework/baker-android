@@ -58,7 +58,10 @@ import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.MagazineDeleteTask;
 import com.baker.abaker.workers.UnzipperTask;
 
+import org.json.JSONException;
+
 import java.io.File;
+import java.text.ParseException;
 
 
 public class MagazineThumb extends LinearLayout implements GindMandator {
@@ -112,6 +115,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private final int UNZIP_MAGAZINE_TASK = 2;
     private final int MAGAZINE_DELETE_TASK = 3;
     private final int POST_DOWNLOAD_TASK = 4;
+    private final int BOOK_JSON_PARSE_TASK = 5;
 
     private Activity activity;
 
@@ -271,6 +275,15 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         readable = true;
     }
 
+    public void enableReadButton() {
+        findViewById(R.id.download_container).setVisibility(View.GONE);
+        findViewById(R.id.btnArchive).setVisibility(View.GONE);
+        findViewById(R.id.actions_ui).setVisibility(View.VISIBLE);
+
+        //Issue becomes readable
+        readable = true;
+    }
+
     public void setBookJson(BookJson bookJson) {
         this.book = bookJson;
 
@@ -278,7 +291,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             GindActivity activity = (GindActivity) this.getContext();
             activity.viewMagazine(this.book);
         } else {
-            Toast.makeText(this.getContext(), "Not valid book.json found!",
+            Toast.makeText(this.getContext(), "The book.json was not found!",
                     Toast.LENGTH_LONG).show();
         }
 
@@ -342,8 +355,15 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      */
     private void readIssue() {
         BookJsonParserTask parser = new BookJsonParserTask(
-                MagazineThumb.this);
-        parser.execute(magazine.getName());
+                this.getContext(),
+                this.magazine,
+                this,
+                BOOK_JSON_PARSE_TASK);
+        if (magazine.isStandalone()) {
+            parser.execute("STANDALONE");
+        } else {
+            parser.execute(magazine.getName());
+        }
     }
 
     private void readOnline() {
@@ -353,7 +373,10 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         ((TextView) findViewById(R.id.txtProgress)).setText(R.string.loadingPreview);
 
         BookJsonParserTask parser = new BookJsonParserTask(
-                MagazineThumb.this);
+                this.getContext(),
+                this.magazine,
+                this,
+                BOOK_JSON_PARSE_TASK);
         parser.execute("ONLINE");
     }
 
@@ -543,6 +566,24 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             case POST_DOWNLOAD_TASK:
                 if (!results[0].equals("ERROR")) {
                 }
+                break;
+            case BOOK_JSON_PARSE_TASK:
+                try {
+                    BookJson bookJson = new BookJson();
+
+                    final String magazineName = results[0];
+                    final String rawJson = results[1];
+
+                    bookJson.setMagazineName(magazineName);
+                    bookJson.fromJson(rawJson);
+
+                    setBookJson(bookJson);
+                } catch (JSONException ex) {
+                    Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
+                } catch (ParseException ex) {
+                    Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
+                }
+
                 break;
         }
     }
