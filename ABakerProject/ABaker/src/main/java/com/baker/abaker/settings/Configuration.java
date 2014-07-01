@@ -190,7 +190,7 @@ public class Configuration {
                 }
             }
         } else {
-            return false;
+            return true;
         }
 
         return (directory.delete());

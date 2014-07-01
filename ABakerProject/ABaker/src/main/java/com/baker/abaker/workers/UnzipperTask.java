@@ -37,11 +37,13 @@ public class UnzipperTask extends AsyncTask<String, Long, String> {
 
     @Override
     protected String doInBackground(String... params) {
+        String result;
+        String workingDir = "";
         try {
             Log.d(this.getClass().getName(), "Started unzip process for file " + params[0]);
 
             // First we create a directory to hold the unzipped files.
-            String workingDir = params[0].substring(0, params[0].lastIndexOf("/")) + File.separator;
+            workingDir = params[0].substring(0, params[0].lastIndexOf("/")) + File.separator;
             File containerDir = new File(workingDir + params[1]);
 
             Log.d(this.getClass().getName(), "Magazine Directory: " + containerDir);
@@ -53,18 +55,27 @@ public class UnzipperTask extends AsyncTask<String, Long, String> {
             if (containerDir.mkdirs()) {
                 workingDir = workingDir + params[1] + File.separator;
                 this.extract(params[0], workingDir);
+                result = "SUCCESS";
             } else {
                 Log.e(this.getClass().getName(), "Could not create the package directory");
                 //TODO: Notify the user
-                return null;
+                result = "ERROR";
             }
         } catch (IOException ex) {
             Log.e(this.getClass().getName(), "Error unzipping the issue.", ex);
-            return null;
+            result = "ERROR";
         }
 
-        Log.d(this.getClass().getName(), "Unzip process finished successfully.");
-        return "SUCCESS";
+        if (result.equals("SUCCESS")) {
+            Log.d(this.getClass().getName(), "Unzip process finished successfully.");
+        } else {
+            Log.d(this.getClass().getName(), "There was a problem extracting the issue.");
+            if (!workingDir.isEmpty()) {
+                Configuration.deleteDirectory(workingDir);
+            }
+        }
+
+        return result;
     }
 
     private void extract(final String inputFile, final String outputDir) throws IOException  {

@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.baker.abaker.GindActivity;
 import com.baker.abaker.client.GindMandator;
+import com.baker.abaker.settings.Configuration;
 
 import java.io.File;
 
@@ -186,7 +187,11 @@ public class DownloaderTask extends AsyncTask<String, Long, String> {
 
                 switch (status) {
                     case DownloadManager.STATUS_PAUSED:
-                        //Do nothing
+                        if (!Configuration.hasNetworkConnection(this.context)) {
+                            result = "ERROR";
+                            dm.remove(downloadId);
+                            downloading = false;
+                        }
                         break;
                     case DownloadManager.STATUS_PENDING:
                         //Do nothing
@@ -208,6 +213,7 @@ public class DownloaderTask extends AsyncTask<String, Long, String> {
                         downloadedFile = dm.getUriForDownloadedFile(downloadId);
                         break;
                     case DownloadManager.STATUS_FAILED:
+                        result = "ERROR";
                         Log.e(this.getClass().getName(), "ERROR Downloading " + this.fileName);
                         dm.remove(downloadId);
                         downloading = false;

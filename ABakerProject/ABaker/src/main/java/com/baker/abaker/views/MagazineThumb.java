@@ -450,6 +450,13 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         ((ImageView) findViewById(R.id.imgCover)).setImageBitmap(bmp);
     }
 
+    private void resetUI() {
+        findViewById(R.id.download_container).setVisibility(View.VISIBLE);
+        findViewById(R.id.txtProgress).setVisibility(View.GONE);
+        findViewById(R.id.progress_ui).setVisibility(View.GONE);
+        findViewById(R.id.actions_ui).setVisibility(View.GONE);
+    }
+
     /**
      * Updates the UI to let the user download the issue.
      */
@@ -517,6 +524,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             case MAGAZINE_DOWNLOAD_TASK:
                 this.packDownloader = null;
                 //When the download task ended successfully we will start unzipping the file.
+                Log.d(this.getClass().getName(), "DownloaderTask result: " + results[0]);
                 if (results[0].equals("SUCCESS")) {
                     // Here we register the DOWNLOAD ISSUE event on Google Analytics
                     if (this.activity.getResources().getBoolean(R.bool.ga_enable) && this.activity.getResources().getBoolean(R.bool.ga_register_issue_download_event)) {
@@ -527,6 +535,8 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                     }
 
                     startUnzip(results[1], this.magazine.getName());
+                } else if (results[0].equals("ERROR")) {
+                    this.resetUI();
                 }
                 break;
             case THUMB_DOWNLOAD_TASK:
@@ -544,6 +554,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                     this.enableReadArchiveActions();
                     this.sendDownloadReport();
                 } else {
+                    this.resetUI();
                     Toast.makeText(this.getContext(), "Could not extract the package. Possibly corrupted.",
                             Toast.LENGTH_LONG).show();
                 }
