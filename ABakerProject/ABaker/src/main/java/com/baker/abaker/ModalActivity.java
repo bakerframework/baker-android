@@ -33,6 +33,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -53,6 +54,13 @@ public class ModalActivity extends Activity {
         Intent intent = getIntent();
         String url = intent.getStringExtra(MagazineActivity.MODAL_URL);
         orientation = intent.getIntExtra(MagazineActivity.ORIENTATION, ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
+        // Click on the CLOSE button.
+        findViewById(R.id.btnCloseModal).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ModalActivity.this.finish();
+            }
+        });
 
         WebView webView = (WebView) this.findViewById(R.id.modalWebView);
         webView.getSettings().setJavaScriptEnabled(true);

@@ -31,6 +31,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -48,6 +49,13 @@ public class InfoActivity extends Activity {
 
         Intent intent = getIntent();
         String url = intent.getStringExtra(MagazineActivity.MODAL_URL);
+
+        // Click on the CLOSE button.
+        findViewById(R.id.btnCloseInfo).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                InfoActivity.this.finish();
+            }
+        });
 
         WebView webView = (WebView) this.findViewById(R.id.infoWebView);
         webView.getSettings().setJavaScriptEnabled(true);
