@@ -90,20 +90,14 @@
                     android:text="@string/preview"
                     android:visibility="gone"
 
-                    android:fontFamily="sans-serif-light"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:minWidth="22dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:background="#AF160E" />
+                    style="@style/abaker_default_button" />
 
                 <View
                     android:id="@+id/btnPreviewSpacer"
                     android:layout_height="match_parent"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:visibility="gone"></View>
+                    android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnDownload"
@@ -112,13 +106,7 @@
                     android:layout_margin="2dp"
                     android:text="@string/download"
 
-                    android:fontFamily="sans-serif-light"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:minWidth="22dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:background="#AF160E" />
+                    style="@style/abaker_default_button" />
             </LinearLayout>
 
 
@@ -165,13 +153,7 @@
                     android:layout_marginRight="5dp"
                     android:text="@string/read"
 
-                    android:fontFamily="sans-serif-light"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:minWidth="22dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:background="#AF160E" />
+                    style="@style/abaker_default_button" />
 
                 <Button
                     android:id="@+id/btnArchive"
@@ -180,13 +162,7 @@
                     android:layout_margin="2dp"
                     android:text="@string/archive"
 
-                    android:fontFamily="sans-serif-light"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:minWidth="22dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:background="#AF160E"/>
+                    style="@style/abaker_default_button"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -50,6 +50,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.baker.abaker.model.BookJson;
@@ -58,6 +59,7 @@ import com.baker.abaker.views.CustomWebView;
 import com.baker.abaker.views.CustomWebViewPager;
 import com.baker.abaker.views.WebViewFragment;
 import com.baker.abaker.views.WebViewFragmentPagerAdapter;
+import com.viewpagerindicator.LinePageIndicator;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -75,6 +77,8 @@ import java.util.Map;
 public class MagazineActivity extends FragmentActivity {
 
     private boolean doubleTap = false;
+    private boolean enableDoubleTap = true;
+    private boolean enableBackNextButton = false;
 
 	private GestureDetectorCompat gestureDetector;
 	private WebViewFragmentPagerAdapter webViewPagerAdapter;
@@ -83,8 +87,6 @@ public class MagazineActivity extends FragmentActivity {
 
     public final static String MODAL_URL = "com.giniem.gindpubs.MODAL_URL";
     public final static String ORIENTATION = "com.giniem.gindpubs.ORIENTATION";
-    private final String LANDSCAPE = "LANDSCAPE";
-    private final String PORTRAIT = "PORTRAIT";
 
     private Resources resources;
 
@@ -98,6 +100,9 @@ public class MagazineActivity extends FragmentActivity {
 
     private boolean STANDALONE_MODE = false;
     private boolean RETURN_TO_SHELF = false;
+    private boolean ENABLE_BACK_NEXT_BUTTONS = false;
+    private boolean ENABLE_DOUBLE_TAP = true;
+    private boolean ENABLE_TUTORIAL = false;
 
     public BookJson getJsonBook() {
         return this.jsonBook;
@@ -135,8 +140,11 @@ public class MagazineActivity extends FragmentActivity {
 		Intent intent = getIntent();
 
 		try {
-            STANDALONE_MODE = intent.getBooleanExtra(GindActivity.MAGAZINE_STANDALONE, false);
-            RETURN_TO_SHELF = intent.getBooleanExtra(GindActivity.MAGAZINE_RETURN_TO_SHELF, true);
+            STANDALONE_MODE = intent.getBooleanExtra(Configuration.MAGAZINE_STANDALONE, false);
+            RETURN_TO_SHELF = intent.getBooleanExtra(Configuration.MAGAZINE_RETURN_TO_SHELF, true);
+            ENABLE_DOUBLE_TAP = intent.getBooleanExtra(Configuration.MAGAZINE_ENABLE_DOUBLE_TAP, true);
+            ENABLE_BACK_NEXT_BUTTONS = intent.getBooleanExtra(Configuration.MAGAZINE_ENABLE_BACK_NEXT_BUTTONS, false);
+            ENABLE_TUTORIAL = intent.getBooleanExtra(Configuration.MAGAZINE_ENABLE_TUTORIAL, false);
 
             Log.d(this.getClass().getName(), "Will run in standalone mode: " + STANDALONE_MODE);
             if (!RETURN_TO_SHELF) {
@@ -147,12 +155,17 @@ public class MagazineActivity extends FragmentActivity {
 
 			jsonBook = new BookJson();
             jsonBook.setMagazineName(intent
-					.getStringExtra(GindActivity.MAGAZINE_NAME));
-            Log.d(this.getClass().toString(), "THE RAW BOOK.JSON IS: " + intent.getStringExtra(GindActivity.BOOK_JSON_KEY));
-            jsonBook.fromJson(intent.getStringExtra(GindActivity.BOOK_JSON_KEY));
+					.getStringExtra(Configuration.MAGAZINE_NAME));
+            Log.d(this.getClass().toString(), "THE RAW BOOK.JSON IS: " + intent.getStringExtra(Configuration.BOOK_JSON_KEY));
+            jsonBook.fromJson(intent.getStringExtra(Configuration.BOOK_JSON_KEY));
 
             this.setOrientation(jsonBook.getOrientation());
             this.setPagerView(jsonBook);
+
+            this.setEnableDoubleTap(ENABLE_DOUBLE_TAP);
+            this.setEnableBackNextButton(ENABLE_BACK_NEXT_BUTTONS);
+
+            detectFirstOrLastPage();
 
 			gestureDetector = new GestureDetectorCompat(this,
 					new MyGestureListener());
@@ -165,11 +178,67 @@ public class MagazineActivity extends FragmentActivity {
         resources = getResources();
 	}
 
+    private void detectFirstOrLastPage() {
+
+        if (!isEnableBackNextButton()) {
+            return;
+        }
+
+        int allItems = this.getJsonBook().getContents().size();
+        int currentItem = this.pager.getCurrentItem();
+
+        if (currentItem == (allItems - 1)) {
+            Log.d(this.getClass().getName(), "Last page detected.");
+            ((Button)findViewById(R.id.buttonNext)).setText(getString(R.string.finish));
+
+            if (allItems > 1) {
+                findViewById(R.id.buttonBack).setVisibility(View.VISIBLE);
+            }
+        } else if (currentItem == 0) {
+            Log.d(this.getClass().getName(), "First page detected.");
+            findViewById(R.id.buttonBack).setVisibility(View.GONE);
+            ((Button)findViewById(R.id.buttonNext)).setText(getString(R.string.next));
+        } else {
+            findViewById(R.id.buttonBack).setVisibility(View.VISIBLE);
+            ((Button)findViewById(R.id.buttonNext)).setText(getString(R.string.next));
+        }
+    }
+
+    private void goNext() {
+        int currentItem = this.pager.getCurrentItem();
+        int nextItem = currentItem + 1;
+        int allItems = this.getJsonBook().getContents().size();
+
+        Log.d(this.getClass().getName(), "All items: " + allItems + ", current item: " + currentItem + ", next item: " + nextItem);
+
+        if (nextItem < allItems) {
+            this.pager.setCurrentItem(nextItem);
+            this.detectFirstOrLastPage();
+        } else if (nextItem == allItems) {
+            this.finish();
+        }
+    }
+
+    private void goBack() {
+        int currentItem = this.pager.getCurrentItem();
+        int nextItem = currentItem - 1;
+        int allItems = this.getJsonBook().getContents().size();
+
+        Log.d(this.getClass().getName(), "All items: " + allItems + ", current item: " + currentItem + ", next item: " + nextItem);
+
+        if (nextItem >= 0) {
+            this.pager.setCurrentItem(nextItem);
+            this.detectFirstOrLastPage();
+        }
+    }
+
     private void setOrientation(String _orientation) {
 
         _orientation = _orientation.toUpperCase();
         this.orientation = _orientation;
 
+        final String PORTRAIT = "PORTRAIT";
+        final String LANDSCAPE = "LANDSCAPE";
         if (PORTRAIT.equals(_orientation)) {
             this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         } else if (LANDSCAPE.equals(_orientation)) {
@@ -183,7 +252,45 @@ public class MagazineActivity extends FragmentActivity {
         this.setOrientation(this.orientation);
     }
 
-	/**
+    public boolean isEnableDoubleTap() {
+        return enableDoubleTap;
+    }
+
+    public void setEnableDoubleTap(boolean enableDoubleTap) {
+        this.enableDoubleTap = enableDoubleTap;
+    }
+
+    public boolean isEnableBackNextButton() {
+        return enableBackNextButton;
+    }
+
+    public void setEnableBackNextButton(boolean enableBackNextButton) {
+        this.enableBackNextButton = enableBackNextButton;
+
+        if (enableBackNextButton) {
+            findViewById(R.id.buttonNext).setVisibility(View.VISIBLE);
+            // Click on the next button
+            findViewById(R.id.buttonNext).setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    goNext();
+                }
+            });
+
+            // No need for a "Back" button when there's only one page.
+            if (this.getJsonBook().getContents().size() > 1) {
+                findViewById(R.id.buttonBack).setVisibility(View.VISIBLE);
+                // Click on the back button
+                findViewById(R.id.buttonBack).setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        goBack();
+                    }
+                });
+            }
+
+        }
+    }
+
+    /**
 	 * Set up the {@link android.app.ActionBar}, if the API is available.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -256,6 +363,8 @@ public class MagazineActivity extends FragmentActivity {
         if (STANDALONE_MODE) {
             path = "file:///android_asset".concat(File.separator)
                     .concat(getString(R.string.sa_books_directory)).concat(File.separator);
+        } else if (ENABLE_TUTORIAL) {
+            path = "file:///android_asset".concat(File.separator);
         }
 
         if (book.getLiveUrl() != null) {
@@ -271,7 +380,15 @@ public class MagazineActivity extends FragmentActivity {
 				getSupportFragmentManager(), book, finalPath, this);
 		pager = (CustomWebViewPager) findViewById(R.id.pager);
 		pager.setAdapter(webViewPagerAdapter);
-        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+
+        //Bind the title indicator to the adapter
+        LinePageIndicator indicator = (LinePageIndicator)findViewById(R.id.indicator);
+        if (!ENABLE_TUTORIAL) {
+            indicator.setVisibility(View.GONE);
+        }
+        indicator.setViewPager(pager);
+
+        indicator.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
@@ -279,13 +396,13 @@ public class MagazineActivity extends FragmentActivity {
                 if (hasElapsedTime) {
                     Long timeElapsed = System.currentTimeMillis() - startedTime;
                     if (timeElapsed > resources.getInteger(R.integer.ga_page_view_time_elapsed))
-                    ((ABakerApp)MagazineActivity.this.getApplication()).sendTimingEvent(
-                            metaBakerPageCategory,
-                            timeElapsed,
-                            getString(R.string.issue_page_view),
-                            metaBakerPageName);
+                        ((ABakerApp) MagazineActivity.this.getApplication()).sendTimingEvent(
+                                metaBakerPageCategory,
+                                timeElapsed,
+                                getString(R.string.issue_page_view),
+                                metaBakerPageName);
 
-                    ((ABakerApp)MagazineActivity.this.getApplication()).sendEvent(
+                    ((ABakerApp) MagazineActivity.this.getApplication()).sendEvent(
                             metaBakerPageCategory,
                             getString(R.string.issue_page_view),
                             metaBakerPageName);
@@ -298,6 +415,8 @@ public class MagazineActivity extends FragmentActivity {
                 }
 
                 Log.d(this.getClass().getName(), "Loading page at index: " + position);
+
+                detectFirstOrLastPage();
 
                 if (resources.getBoolean(R.bool.ga_enable) && resources.getBoolean(R.bool.ga_register_page_view_event)) {
 
@@ -318,7 +437,7 @@ public class MagazineActivity extends FragmentActivity {
                             metaBakerPageName = name;
                             metaBakerPageCategory = category;
                         } else {
-                            ((ABakerApp)MagazineActivity.this.getApplication()).sendEvent(
+                            ((ABakerApp) MagazineActivity.this.getApplication()).sendEvent(
                                     category,
                                     getString(R.string.issue_page_view),
                                     name);
@@ -477,23 +596,24 @@ public class MagazineActivity extends FragmentActivity {
 
 		@Override
 		public boolean onDoubleTap(MotionEvent event) {
-            doubleTap = true;
-			CustomWebView viewIndex = (CustomWebView) findViewById(R.id.webViewIndex);
+            if (isEnableDoubleTap()) {
+                doubleTap = true;
+                CustomWebView viewIndex = (CustomWebView) findViewById(R.id.webViewIndex);
 
-            //Disable Index Zoom
-            viewIndex.getSettings().setSupportZoom(false);
+                //Disable Index Zoom
+                viewIndex.getSettings().setSupportZoom(false);
 
-			if (viewIndex.isShown()) {
-				viewIndex.setVisibility(View.GONE);
-			} else {
+                if (viewIndex.isShown()) {
+                    viewIndex.setVisibility(View.GONE);
+                } else {
 
-                WebViewFragment fragment = (WebViewFragment) MagazineActivity.this.webViewPagerAdapter
-                        .instantiateItem(pager, pager.getCurrentItem());
-                if (!fragment.inCustomView()) {
-                    viewIndex.setVisibility(View.VISIBLE);
+                    WebViewFragment fragment = (WebViewFragment) MagazineActivity.this.webViewPagerAdapter
+                            .instantiateItem(pager, pager.getCurrentItem());
+                    if (!fragment.inCustomView()) {
+                        viewIndex.setVisibility(View.VISIBLE);
+                    }
                 }
-			}
-
+            }
 			return true;
 		}
 	}

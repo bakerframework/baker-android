@@ -88,17 +88,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class GindActivity extends Activity implements GindMandator {
-
-    public final static String BOOK_JSON_KEY = "com.giniem.gindpubs.BOOK_JSON_KEY";
-    public final static String MAGAZINE_NAME = "com.giniem.gindpubs.MAGAZINE_NAME";
-    public final static String MAGAZINE_STANDALONE = "com.giniem.gindpubs.STANDALONE";
-    public final static String MAGAZINE_RETURN_TO_SHELF = "com.giniem.gindpubs.MAGAZINE_RETURN_TO_SHELF";
-    public static final String PROPERTY_REG_ID = "com.giniem.gindpubs.REGISTRATION_ID";
-    public static final String DOWNLOAD_IN_PROGRESS = "com.giniem.gindpubs.DOWNLOAD_ID";
-    private static final String PROPERTY_APP_VERSION = "com.giniem.gindpubs.APP_VERSION";
 
     /**
      * Code used when the MagazineActivity finishes, so we can evaluate if we need to close this
@@ -217,9 +210,19 @@ public class GindActivity extends Activity implements GindMandator {
                 checkInternetTask.execute();
             }
 
+            SharedPreferences sharedPreferences = this.getPreferences(this);
+            if (sharedPreferences.getBoolean(Configuration.FIRST_TIME_RUN, true) && getResources().getBoolean(R.bool.ut_enable_tutorial)) {
+                //the app is being launched for first time, do something
+                Log.d(this.getClass().getName(), "First time app running, launching tutorial.");
+
+                showAppUsage();
+
+                sharedPreferences.edit().putBoolean(Configuration.FIRST_TIME_RUN, false).apply();
+            }
+
             // Here we register the APP OPEN event on Google Analytics
             if (getResources().getBoolean(R.bool.ga_enable) && getResources().getBoolean(R.bool.ga_register_app_open_event)) {
-                ((ABakerApp)this.getApplication()).sendEvent(
+                ((ABakerApp) this.getApplication()).sendEvent(
                         getString(R.string.application_category),
                         getString(R.string.application_open),
                         getString(R.string.application_open_label));
@@ -458,8 +461,8 @@ public class GindActivity extends Activity implements GindMandator {
     }
 
     private String getRegistrationId(Context context) {
-        final SharedPreferences prefs = getGCMPreferences(context);
-        String regId = prefs.getString(PROPERTY_REG_ID, "");
+        final SharedPreferences prefs = getPreferences(context);
+        String regId = prefs.getString(Configuration.PROPERTY_REG_ID, "");
         if (regId.isEmpty()) {
             Log.d(this.getClass().toString(), "Registration ID not found.");
             return "";
@@ -467,7 +470,7 @@ public class GindActivity extends Activity implements GindMandator {
         // Check if app was updated; if so, it must clear the registration ID
         // since the existing regID is not guaranteed to work with the new
         // app version.
-        int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
+        int registeredVersion = prefs.getInt(Configuration.PROPERTY_APP_VERSION, Integer.MIN_VALUE);
         int currentVersion = getAppVersion(context);
         if (registeredVersion != currentVersion) {
             Log.d(this.getClass().toString(), "App version changed.");
@@ -499,7 +502,7 @@ public class GindActivity extends Activity implements GindMandator {
     /**
      * @return Application's {@code SharedPreferences}.
      */
-    private SharedPreferences getGCMPreferences(Context context) {
+    private SharedPreferences getPreferences(Context context) {
         // This sample app persists the registration ID in shared preferences, but
         // how you store the regID in your app is up to you.
         return getSharedPreferences(GindActivity.class.getSimpleName(),
@@ -507,12 +510,12 @@ public class GindActivity extends Activity implements GindMandator {
     }
 
     private void storeRegistrationId(Context context, String regId) {
-        final SharedPreferences prefs = getGCMPreferences(context);
+        final SharedPreferences prefs = getPreferences(context);
         int appVersion = getAppVersion(context);
         Log.i(this.getClass().toString(), "Saving regId on app version " + appVersion);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(PROPERTY_REG_ID, regId);
-        editor.putInt(PROPERTY_APP_VERSION, appVersion);
+        editor.putString(Configuration.PROPERTY_REG_ID, regId);
+        editor.putInt(Configuration.PROPERTY_APP_VERSION, appVersion);
         editor.commit();
     }
 
@@ -642,14 +645,44 @@ public class GindActivity extends Activity implements GindMandator {
     public void viewMagazine(final BookJson book) {
         Intent intent = new Intent(this, MagazineActivity.class);
         try {
-            intent.putExtra(BOOK_JSON_KEY, book.toJSON().toString());
-            intent.putExtra(MAGAZINE_NAME, book.getMagazineName());
-            intent.putExtra(MAGAZINE_STANDALONE, STANDALONE_MODE);
-            intent.putExtra(MAGAZINE_RETURN_TO_SHELF, RETURN_TO_SHELF);
+            intent.putExtra(Configuration.BOOK_JSON_KEY, book.toJSON().toString());
+            intent.putExtra(Configuration.MAGAZINE_NAME, book.getMagazineName());
+            intent.putExtra(Configuration.MAGAZINE_STANDALONE, STANDALONE_MODE);
+            intent.putExtra(Configuration.MAGAZINE_RETURN_TO_SHELF, RETURN_TO_SHELF);
             startActivityForResult(intent, STANDALONE_MAGAZINE_ACTIVITY_FINISH);
         } catch (JSONException e) {
             Toast.makeText(this, "The book.json is invalid.",
                     Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void showAppUsage() {
+        BookJson book = new BookJson();
+        book.setMagazineName(this.getString(R.string.ut_directory));
+
+        List<String> contents = new ArrayList<String>();
+
+        String pages[] = this.getString(R.string.ut_pages).split(">");
+        for (String page : pages) {
+            page = page.trim();
+            contents.add(page);
+        }
+
+        book.setContents(contents);
+        book.setOrientation("portrait");
+
+        Intent intent = new Intent(this, MagazineActivity.class);
+        try {
+            intent.putExtra(Configuration.BOOK_JSON_KEY, book.toJSON().toString());
+            intent.putExtra(Configuration.MAGAZINE_NAME, book.getMagazineName());
+            //intent.putExtra(Configuration.MAGAZINE_STANDALONE, true);
+            intent.putExtra(Configuration.MAGAZINE_RETURN_TO_SHELF, true);
+            intent.putExtra(Configuration.MAGAZINE_ENABLE_DOUBLE_TAP, false);
+            intent.putExtra(Configuration.MAGAZINE_ENABLE_BACK_NEXT_BUTTONS, true);
+            intent.putExtra(Configuration.MAGAZINE_ENABLE_TUTORIAL, true);
+            startActivityForResult(intent, STANDALONE_MAGAZINE_ACTIVITY_FINISH);
+        } catch (JSONException e) {
+            // Nothing
         }
     }
 

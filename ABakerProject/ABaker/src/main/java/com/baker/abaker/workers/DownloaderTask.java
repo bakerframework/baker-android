@@ -114,13 +114,13 @@ public class DownloaderTask extends AsyncTask<String, Long, String> {
     private void storeDownloadId() {
         SharedPreferences preferences = context.getSharedPreferences(GindActivity.class.getSimpleName(), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putLong(GindActivity.DOWNLOAD_IN_PROGRESS + this.fileName, this.downloadId);
+        editor.putLong(Configuration.DOWNLOAD_IN_PROGRESS + this.fileName, this.downloadId);
         editor.commit();
     }
 
     private long restoreDownloadId() {
         SharedPreferences preferences = context.getSharedPreferences(GindActivity.class.getSimpleName(), Context.MODE_PRIVATE);
-        long id = preferences.getLong(GindActivity.DOWNLOAD_IN_PROGRESS + this.fileName, -1L);
+        long id = preferences.getLong(Configuration.DOWNLOAD_IN_PROGRESS + this.fileName, -1L);
 
         return id;
     }
@@ -129,7 +129,7 @@ public class DownloaderTask extends AsyncTask<String, Long, String> {
         this.downloadId = -1L;
         SharedPreferences preferences = context.getSharedPreferences(GindActivity.class.getSimpleName(), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.remove(GindActivity.DOWNLOAD_IN_PROGRESS + this.fileName);
+        editor.remove(Configuration.DOWNLOAD_IN_PROGRESS + this.fileName);
         editor.commit();
     }
 

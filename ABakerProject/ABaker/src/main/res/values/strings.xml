@@ -66,7 +66,9 @@
     <string name="thumbImageDescription">Thumbnail</string>
     <string name="confirmation">Confirmation</string>
     <string name="archiveConfirm">Are you sure you want to archive this issue?</string>
-    <string name="title_activity_video">VideoActivity</string>
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="finish">Finish</string>
 
     <!-- Hostname to try to reach to test the internet connection on the device, e.g. when downloading the shelf, check if your server is reachable. -->
     <string name="check_internet_with_host">http://google.com</string>
@@ -100,4 +102,11 @@
     <!-- Strings for the standalone mode -->
     <string name="sa_books_directory">books</string>
     <string name="sa_no_issues">No issues found.</string>
+
+    <!-- Strings for the usage tutorial -->
+    <string name="ut_directory">abaker_usage</string>
+    <!-- The names of the pages, separated by ">", that will be included in the tutorial for showing the users
+     how to use ABaker. These must be present in the "ut_directory" directory.
+     You can customize those pages as you wish with HTML code, or add more if you want. -->
+    <string name="ut_pages">download.html > read.html > archive.html</string>
 </resources>

@@ -3,25 +3,27 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.10.+'
+        classpath 'com.android.tools.build:gradle:0.12.+'
     }
 }
 
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 version '1.1'
 group 'com.baker'
 
 repositories {
+    maven { url "http://dl.bintray.com/populov/maven" }
     mavenCentral()
-    maven { url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+    maven {
+        url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
     }
 }
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    buildToolsVersion "20"
 
     defaultConfig {
         minSdkVersion 11
@@ -43,7 +45,8 @@ uploadArchives {
 task install(dependsOn: uploadArchives)
 
 dependencies {
-    compile 'com.google.android.gms:play-services:4.4.52'
+    compile 'com.google.android.gms:play-services:5.0.77'
     compile 'org.jsoup:jsoup:1.7.3'
     compile 'org.apache.commons:commons-compress:1.8.1'
+    compile 'com.viewpagerindicator:library:2.4.1@aar'
 }

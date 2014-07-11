@@ -49,6 +49,21 @@ import java.util.Map;
 
 public class Configuration {
 
+    public final static String BOOK_JSON_KEY = "com.baker.abaker.BOOK_JSON_KEY";
+
+    public final static String MAGAZINE_NAME = "com.baker.abaker.MAGAZINE_NAME";
+    public final static String MAGAZINE_STANDALONE = "com.baker.abaker.STANDALONE";
+    public final static String MAGAZINE_RETURN_TO_SHELF = "com.baker.abaker.MAGAZINE_RETURN_TO_SHELF";
+    public final static String MAGAZINE_ENABLE_BACK_NEXT_BUTTONS = "com.baker.abaker.MAGAZINE_ENABLE_BACK_NEXT_BUTTONS";
+    public final static String MAGAZINE_ENABLE_DOUBLE_TAP = "com.baker.abaker.MAGAZINE_ENABLE_DOUBLE_TAP";
+    public final static String MAGAZINE_ENABLE_TUTORIAL = "com.baker.abaker.MAGAZINE_ENABLE_TUTORIAL";
+
+    public final static String PROPERTY_REG_ID = "com.baker.abaker.REGISTRATION_ID";
+    public final static String DOWNLOAD_IN_PROGRESS = "com.baker.abaker.DOWNLOAD_ID";
+    public final static String PROPERTY_APP_VERSION = "com.baker.abaker.APP_VERSION";
+
+    public final static String FIRST_TIME_RUN = "com.baker.abaker.FIRST_TIME_RUN";
+
     private static final String LOG_TITLE = ">>>CONFIGURATION";
 
     /**

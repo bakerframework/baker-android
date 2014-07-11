@@ -2,4 +2,7 @@
 <resources>
     <!-- Set to true if you want ABaker to run as standalone app, loading the issues files from "assets/books"-->
     <bool name="run_as_standalone">false</bool>
+
+    <!-- When opening ABaker for the very first time, show the users some features so they know how to use the app. -->
+    <bool name="ut_enable_tutorial">true</bool>
 </resources>
