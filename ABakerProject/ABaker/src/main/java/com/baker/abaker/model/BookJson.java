@@ -40,7 +40,7 @@ import java.util.Locale;
 
 public class BookJson {
 
-	private int hpub;
+	private String hpub;
 
 	private String magazineName;
 	
@@ -82,7 +82,7 @@ public class BookJson {
 	private List<String> contents;
 	
 	public BookJson() {
-		this.hpub = 0;
+		this.hpub = "1";
 		this.date = new Date();
 		this.authors = new ArrayList<String>();
 		this.creators = new ArrayList<String>();
@@ -101,11 +101,11 @@ public class BookJson {
 		this.pageTurnTap = false;
 	}
 
-	public int getHpub() {
+	public String getHpub() {
 		return hpub;
 	}
 
-	public void setHpub(int hpub) {
+	public void setHpub(String hpub) {
 		this.hpub = hpub;
 	}
 
@@ -264,12 +264,12 @@ public class BookJson {
 
 		// The other properties are commented by now, as we are not gonna use them yet.
 		
-//		this.hpub = json.getInt("hpub");
-//		this.title = json.getString("title");
+		this.hpub = json.optString("hpub", "1");
+		this.title = json.optString("title", "");
 //		this.date = sdfInput.parse(json.getString("date"));
-//		this.url = json.getString("url");
-//		this.cover = json.getString("cover");
-		this.orientation = json.getString("orientation");
+		this.url = json.optString("url", "");
+		this.cover = json.optString("cover", "");
+        this.orientation = json.optString("orientation", "PORTRAIT");
 //		this.zoomable = json.getBoolean("zoomable");
 //		this.background = json.getString("-baker-background");
 //		this.verticalBounce = json.getBoolean("-baker-vertical-bounce");
@@ -295,9 +295,6 @@ public class BookJson {
 //		}
 
 		for (int i = 0; i < contents.length(); i++) {
-
-            // We prepend the live URL, if it is empty it won't matter because it would
-            // mean that the magazine is being loaded from the device's filesystem.
 			this.contents.add(contents.getString(i));
 		}
 	}
