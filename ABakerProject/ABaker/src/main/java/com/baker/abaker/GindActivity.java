@@ -155,7 +155,9 @@ public class GindActivity extends Activity implements GindMandator {
         super.onCreate(savedInstanceState);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
-        this.getActionBar().hide();
+        if (this.getActionBar() != null) {
+            this.getActionBar().hide();
+        }
 
         sdfInput = new SimpleDateFormat(
                 getString(R.string.inputDateFormat), Locale.US);
@@ -577,11 +579,13 @@ public class GindActivity extends Activity implements GindMandator {
             this.setContentView(R.layout.activity_gind);
             loadHeader();
             loadBackground();
-            this.getActionBar().show();
+            if (this.getActionBar() != null) {
+                this.getActionBar().show();
 
-            // Modify the action bar to use a custom layout to center the title.
-            this.getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-            this.getActionBar().setCustomView(R.layout.custom_actionbar);
+                // Modify the action bar to use a custom layout to center the title.
+                this.getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+                this.getActionBar().setCustomView(R.layout.custom_actionbar);
+            }
 
             flowLayout = (FlowLayout) findViewById(R.id.thumbsContainer);
 
