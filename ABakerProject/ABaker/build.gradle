@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'com.android.tools.build:gradle:0.13.2'
     }
 }
 
@@ -22,14 +22,14 @@ repositories {
 }
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "20"
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
 
     defaultConfig {
         minSdkVersion 11
-        targetSdkVersion 19
+        targetSdkVersion 21
 
-        testPackageName "com.baker.abaker.test"
+        testApplicationId "com.baker.abaker.test"
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
     }
 }
@@ -45,7 +45,8 @@ uploadArchives {
 task install(dependsOn: uploadArchives)
 
 dependencies {
-    compile 'com.google.android.gms:play-services:5.0.77'
+    compile 'com.google.android.gms:play-services:6.1.71'
+    compile 'com.android.support:support-v4:21.0.0'
     compile 'org.jsoup:jsoup:1.7.3'
     compile 'org.apache.commons:commons-compress:1.8.1'
     compile 'com.viewpagerindicator:library:2.4.1@aar'
