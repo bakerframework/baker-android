@@ -70,8 +70,11 @@ public class WebViewFragmentPagerAdapter extends FragmentStatePagerAdapter {
 	public Fragment getItem(int i) {
         Bundle args = new Bundle();
 
-        String page = this.magazinePath + book.getMagazineName() + File.separator
-                + book.getContents().get(i);
+//        String page = this.magazinePath + book.getMagazineName() + File.separator
+//                + book.getContents().get(i);
+
+        // Magazine path should contain the magazine name and not end with "/".
+        String page = this.magazinePath + File.separator + book.getContents().get(i);
         Log.d(this.getClass().getName(), "Loading page " + page);
         args.putString(WebViewFragment.ARG_OBJECT, page);
 

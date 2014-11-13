@@ -5,4 +5,7 @@
 
     <!-- When opening ABaker for the very first time, show the users some features so they know how to use the app. -->
     <bool name="ut_enable_tutorial">true</bool>
+
+    <!-- Used for using a spacer view between the preview and download buttons. This is useful for custom layouts. -->
+    <bool name="space_between_preview_and_download">false</bool>
 </resources>

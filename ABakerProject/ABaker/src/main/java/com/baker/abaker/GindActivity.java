@@ -139,17 +139,6 @@ public class GindActivity extends Activity implements GindMandator {
      */
     private boolean RETURN_TO_SHELF = true;
 
-    private GLSurfaceView mGLView;
-
-    static {
-        try {
-            System.loadLibrary("JavaScriptCore");
-            System.loadLibrary("ejecta");
-        } catch (UnsatisfiedLinkError ex) {
-            Log.e(GindActivity.class.getName(), "Could not load libraries: " + ex.getMessage());
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -385,80 +374,103 @@ public class GindActivity extends Activity implements GindMandator {
         return result;
     }
 
+    public void downloadNewShelf() {
+        DownloaderTask downloadShelf = new DownloaderTask(
+                this.getApplicationContext(),
+                this,
+                this.DOWNLOAD_SHELF_FILE,
+                getString(R.string.newstand_manifest_url),
+                this.shelfFileName,
+                this.shelfFileTitle,
+                this.shelfFileDescription,
+                Configuration.getCacheDirectory(this),
+                this.shelfFileVisibility);
+        downloadShelf.execute();
+    }
+
+    public void useBackupShelf() {
+        try {
+            String cacheShelfPath = Configuration.getCacheDirectory(this)
+                    + File.separator
+                    + this.getString(R.string.shelf);
+
+            File cachedShelf = new File(cacheShelfPath);
+            File backupShelf = new File(cacheShelfPath + ".backup");
+
+            if (backupShelf.exists()) {
+                Log.d(this.getClass().toString(), "Backed up shelf exists, the system will use it");
+                Configuration.copyFile(backupShelf, cachedShelf);
+                this.readShelf(cacheShelfPath);
+            } else {
+                Log.d(this.getClass().toString(), "The backed up shelf does not exists.");
+                Toast.makeText(this, this.getString(R.string.could_not_read_shelf),
+                        Toast.LENGTH_LONG).show();
+                this.finish();
+            }
+        } catch (IOException ex) {
+            Toast.makeText(this, this.getString(R.string.could_not_read_shelf),
+                    Toast.LENGTH_LONG).show();
+            this.finish();
+        }
+    }
+
+    public void backupCachedShelf() {
+        try {
+            String cacheShelfPath = Configuration.getCacheDirectory(this)
+                    + File.separator
+                    + this.getString(R.string.shelf);
+
+            File cachedShelf = new File(cacheShelfPath);
+            final String contents = Configuration.readFile(cachedShelf);
+
+            Log.d(this.getClass().toString(), "Checking if the shelf is not empty.");
+            final boolean emptyShelf = (cachedShelf.length() == 0L && contents.trim().isEmpty());
+
+            if (emptyShelf) {
+                Log.d(this.getClass().toString(), "Shelf is empty, we will delete it.");
+                cachedShelf.delete();
+            } else {
+                Log.d(this.getClass().toString(), "Will create a backup for the shelf.");
+                Configuration.copyFile(cachedShelf, new File(cacheShelfPath + ".backup"));
+            }
+        } catch (IOException ex) {
+            Toast.makeText(this, this.getString(R.string.could_not_download_shelf),
+                    Toast.LENGTH_LONG).show();
+            this.finish();
+        }
+    }
+
     public void downloadShelf(final String internetAccess) {
         String cacheShelfPath = Configuration.getCacheDirectory(this) + File.separator + this.getString(R.string.shelf);
+
         File cachedShelf = new File(cacheShelfPath);
-        File backup = new File(cacheShelfPath + ".backup");
-        boolean useBackup = false;
-        Log.d(this.getClass().toString(), "INTERNET ACCESS RAW: " + internetAccess);
-        boolean hasInternetAccess = (internetAccess.equals("TRUE")) ? true : false;
+        boolean cachedShelfExists = cachedShelf.exists();
+        boolean hasInternetAccess = internetAccess.equals("TRUE");
 
-        if (hasInternetAccess) {
-            Log.d(this.getClass().toString(), "INTERNET ACCESS AVAILABLE, WILL TRY TO CREATE BACKUP SHELF.");
-            // We make a copy of the shelf as backup in case the download fails.
-            if (cachedShelf.exists()) {
-                try {
-                    String contents = Configuration.readFile(cachedShelf);
+        if (hasInternetAccess && cachedShelfExists) {
+            Log.d(this.getClass().toString(), "Internet access available and shelf exists.");
 
-                    if (cachedShelf.length() == 0L && contents.trim().isEmpty()) {
-                        Log.d(this.getClass().toString(), "Cached shelf.json file is empty.");
-                        cachedShelf.delete();
+            this.backupCachedShelf();
 
-                        if (backup.exists()) {
-                            Log.d(this.getClass().toString(), "shelf.json backup file found, the system will use it.");
-                            Configuration.copyFile(backup, cachedShelf);
-                            useBackup = true;
-                        }
-                    } else {
+            // After creating the backup file, because we have an internet connection,
+            // we proceed to try to download the new shelf. If it fails, we will try to use
+            // the backed up shelf.
+            this.downloadNewShelf();
+        } else if (!hasInternetAccess && cachedShelfExists) {
+            Log.d(this.getClass().toString(), "No Internet access but shelf exists.");
 
-                        if (backup.exists()) {
-                            backup.delete();
-                        }
+            // At this point we do not have internet access, so we just backup the existing
+            // shelf and try to use that one so we can operate later on the original file.
+            this.backupCachedShelf();
+            this.useBackupShelf();
+        } else if (hasInternetAccess && !cachedShelfExists) {
+            Log.d(this.getClass().toString(), "Internet access available but shelf does not exist.");
 
-                        Log.d(this.getClass().toString(), "Creating backup for the shelf.json file.");
-                        Configuration.copyFile(cachedShelf, new File(cacheShelfPath + ".backup"));
-                    }
-                } catch (IOException ioe) {
-                    Toast.makeText(this, "Cannot download the magazine shelf.",
-                            Toast.LENGTH_LONG).show();
-                    this.finish();
-                }
-            }
+            this.downloadNewShelf();
         } else {
-            Log.d(this.getClass().toString(), "NO INTERNET ACCESS, WON'T CREATE BACKUP SHELF.");
-        }
+            Log.d(this.getClass().toString(), "No Internet access and the shelf does not exist.");
 
-        if (hasInternetAccess && !useBackup) {
-            // We get the shelf json asynchronously.
-            DownloaderTask downloadShelf = new DownloaderTask(
-                    this.getApplicationContext(),
-                    this,
-                    this.DOWNLOAD_SHELF_FILE,
-                    getString(R.string.newstand_manifest_url),
-                    this.shelfFileName,
-                    this.shelfFileTitle,
-                    this.shelfFileDescription,
-                    Configuration.getCacheDirectory(this),
-                    this.shelfFileVisibility);
-            downloadShelf.execute();
-        } else if (cachedShelf.exists()) {
-            this.readShelf(cacheShelfPath);
-
-            if (backup.exists()) {
-                Log.d(this.getClass().toString(), "Used shelf.json backup file, deleting backup file.");
-                backup.delete();
-                useBackup = false;
-            }
-        } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(this.getString(R.string.exit))
-                    .setMessage(this.getString(R.string.no_shelf_no_internet))
-                    .setPositiveButton(this.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            GindActivity.this.finish();
-                        }
-                    })
-                    .show();
+            this.useBackupShelf();
         }
     }
 
@@ -621,8 +633,15 @@ public class GindActivity extends Activity implements GindMandator {
                 if (json.has("liveUrl")) {
                     String liveUrl = new String(json.getString("liveUrl").getBytes(encoding), encoding);
                     liveUrl = liveUrl.replace("/" + this.getString(R.string.book), "");
-                    liveUrl = liveUrl.replace("/" + mag.getName(), "");
+
+                    while (liveUrl.endsWith("/")) {
+                        liveUrl = liveUrl.substring(0, liveUrl.length() - 1);
+                    }
+
                     mag.setLiveUrl(liveUrl);
+
+                    Log.d(this.getClass().toString(), "The liveUrl for the magazine "
+                            + mag.getName() + " will be " + liveUrl);
                 }
 
                 //Starting the ThumbLayout
@@ -655,7 +674,7 @@ public class GindActivity extends Activity implements GindMandator {
             intent.putExtra(Configuration.MAGAZINE_RETURN_TO_SHELF, RETURN_TO_SHELF);
             startActivityForResult(intent, STANDALONE_MAGAZINE_ACTIVITY_FINISH);
         } catch (JSONException e) {
-            Toast.makeText(this, "The book.json is invalid.",
+            Toast.makeText(this, this.getString(R.string.invalid_book_json),
                     Toast.LENGTH_LONG).show();
         }
     }
@@ -740,9 +759,9 @@ public class GindActivity extends Activity implements GindMandator {
             // We try to unzip any pending packages.
             this.unzipPendingPackages();
         } catch (Exception e) {
-            Log.e(this.getClass().getName(), "Upss, we colapsed.. :( "
+            Log.e(this.getClass().getName(), "Ups, we collapsed.. :( "
                     + e.getMessage());
-            Toast.makeText(this, "Sorry, we could not read the shelf file :(",
+            Toast.makeText(this, this.getString(R.string.could_not_read_shelf),
                     Toast.LENGTH_LONG).show();
             this.finish();
         }
@@ -774,15 +793,19 @@ public class GindActivity extends Activity implements GindMandator {
                 String filePath = results[1];
 
                 if (taskStatus.equals("SUCCESS")) {
+                    // After the download is successful, we create a backup for the shelf.
+                    this.backupCachedShelf();
                     this.readShelf(filePath);
                 } else if ("DIRECTORY_NOT_FOUND".equals(taskStatus) && "".equals(filePath)) {
-                    Toast.makeText(this, "Please insert an SD card to use the app.",
+                    Toast.makeText(this, this.getString(R.string.could_not_save_shelf),
                             Toast.LENGTH_LONG).show();
                     finish();
                 } else {
-                    Toast.makeText(this, "Cannot download the magazine shelf.",
-                            Toast.LENGTH_LONG).show();
-                    this.finish();
+                    Log.d(this.getClass().toString(), "The shelf download failed, we will try to use a backup file.");
+                    this.useBackupShelf();
+//                    Toast.makeText(this, this.getString(R.string.could_not_download_shelf),
+//                            Toast.LENGTH_LONG).show();
+//                    this.finish();
                 }
                 break;
             case REGISTRATION_TASK:
@@ -791,6 +814,7 @@ public class GindActivity extends Activity implements GindMandator {
                     this.storeRegistrationId(this.getApplicationContext(), results[1]);
                 } else {
                     // Could not create registration ID for GCM services.
+                    Log.d(this.getClass().toString(), "Could not create registration ID for GCM services");
                 }
                 break;
             case CHECK_INTERNET_TASK:

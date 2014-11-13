@@ -54,6 +54,7 @@ import com.baker.abaker.client.PostClientTask;
 import com.baker.abaker.model.BookJson;
 import com.baker.abaker.model.Magazine;
 import com.baker.abaker.workers.BookJsonParserTask;
+import com.baker.abaker.workers.CheckInternetTask;
 import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.MagazineDeleteTask;
 import com.baker.abaker.workers.UnzipperTask;
@@ -116,6 +117,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private final int MAGAZINE_DELETE_TASK = 3;
     private final int POST_DOWNLOAD_TASK = 4;
     private final int BOOK_JSON_PARSE_TASK = 5;
+    private final int CHECK_INTERNET_TASK = 6;
 
     private Activity activity;
 
@@ -213,11 +215,17 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         //Click on the thumbs image
         findViewById(R.id.imgCover).setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                if (readable && !MagazineThumb.this.isDownloading()) {
-                    readIssue();
-                } else if (!MagazineThumb.this.isDownloading()) {
-                    startPackageDownload();
+
+                if (!readable && MagazineThumb.this.magazine.getLiveUrl() != null) {
+                    MagazineThumb.this.checkInternetAccess();
+                } else {
+                    if (readable && !MagazineThumb.this.isDownloading()) {
+                        readIssue();
+                    } else if (!MagazineThumb.this.isDownloading()) {
+                        startPackageDownload();
+                    }
                 }
+
             }
         });
 
@@ -245,14 +253,25 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         // If there is a liveUrl key on the json we enable the functionality to read the
         // magazine online.
         if (this.magazine.getLiveUrl() != null) {
+
+            // If the space is enable in the booleans.xml we use the spacer.
+            if (this.getContext().getResources().getBoolean(R.bool.space_between_preview_and_download)) {
+                findViewById(R.id.btnPreviewSpacer).setVisibility(View.VISIBLE);
+            }
             findViewById(R.id.btnPreview).setVisibility(View.VISIBLE);
-            findViewById(R.id.btnPreviewSpacer).setVisibility(View.VISIBLE);
             findViewById(R.id.btnPreview).setOnClickListener(new OnClickListener() {
                 public void onClick(View v) {
-                    readOnline();
+                    MagazineThumb.this.checkInternetAccess();
                 }
             });
         }
+    }
+
+    private void checkInternetAccess() {
+        CheckInternetTask checkInternetTask = new CheckInternetTask(MagazineThumb.this.getContext(),
+                MagazineThumb.this,
+                CHECK_INTERNET_TASK);
+        checkInternetTask.execute();
     }
 
     /**
@@ -269,6 +288,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      */
     public void enableReadArchiveActions() {
         findViewById(R.id.download_container).setVisibility(View.GONE);
+        findViewById(R.id.txtProgress).setVisibility(View.GONE);
+        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.downloading);
+        findViewById(R.id.progress_ui).setVisibility(View.GONE);
         findViewById(R.id.actions_ui).setVisibility(View.VISIBLE);
 
         //Issue becomes readable
@@ -295,7 +317,8 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                     Toast.LENGTH_LONG).show();
         }
 
-        if (this.previewLoaded == true) {
+        if (this.previewLoaded) {
+            this.previewLoaded = false;
             findViewById(R.id.download_container).setVisibility(View.VISIBLE);
             findViewById(R.id.txtProgress).setVisibility(View.GONE);
         }
@@ -354,6 +377,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      * Change the views to start reading the issue.
      */
     private void readIssue() {
+        enableReadArchiveActions();
         BookJsonParserTask parser = new BookJsonParserTask(
                 this.getContext(),
                 this.magazine,
@@ -368,7 +392,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
 
     private void readOnline() {
         previewLoaded = true;
+        findViewById(R.id.actions_ui).setVisibility(View.GONE);
         findViewById(R.id.download_container).setVisibility(View.GONE);
+        findViewById(R.id.progress_ui).setVisibility(View.GONE);
         findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.txtProgress)).setText(R.string.loadingPreview);
 
@@ -428,13 +454,13 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         if (null == this.unzipperTask) {
             this.unzipperTask = new UnzipperTask(activity, this, UNZIP_MAGAZINE_TASK);
         }
+        //Shows and set the text of progress
+        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.unzipping);
+        findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
 
         findViewById(R.id.download_container).setVisibility(View.GONE);
         findViewById(R.id.actions_ui).setVisibility(View.GONE);
 //        findViewById(R.id.btnRead).setVisibility(View.GONE);
-        //Shows and set the text of progress
-        ((TextView) findViewById(R.id.txtProgress)).setText(R.string.unzipping);
-        findViewById(R.id.txtProgress).setVisibility(View.VISIBLE);
 
         //Starts the unzipping task
         unzipperTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, filePath, name);
@@ -593,6 +619,16 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                     Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
                 } catch (ParseException ex) {
                     Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
+                }
+
+                break;
+            case CHECK_INTERNET_TASK:
+                if (results[0].equals("TRUE")) {
+                    this.readOnline();
+                } else {
+                    Log.e(this.getClass().toString(), "Cannot view issue online. No internet access");
+                    Toast.makeText(this.getContext(), this.getContext().getString(R.string.cannot_view_online),
+                            Toast.LENGTH_LONG).show();
                 }
 
                 break;

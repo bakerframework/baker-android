@@ -87,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="28dp"
                     android:layout_margin="2dp"
-                    android:text="@string/preview"
+                    android:text="@string/read"
                     android:visibility="gone"
 
                     style="@style/abaker_default_button" />

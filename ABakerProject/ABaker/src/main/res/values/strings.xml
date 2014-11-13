@@ -14,6 +14,11 @@
     <string name="no_shelf_no_internet">You need internet connection the first time you start this application.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="could_not_download_shelf">Could not download the magazine shelf</string>
+    <string name="could_not_save_shelf">Could not save the shelf on the device</string>
+    <string name="could_not_read_shelf">Could not read the shelf from the device</string>
+    <string name="invalid_book_json">Invalid magazine package</string>
+    <string name="cannot_view_online">No Internet access to view online</string>
 
     <!-- Shelf URL -->
     <string name="newstand_manifest_url">http://bakerframework.com/demo/shelf.json</string>

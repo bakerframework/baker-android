@@ -358,13 +358,21 @@ public class MagazineActivity extends FragmentActivity {
 	@SuppressLint("SetJavaScriptEnabled")
 	private void setPagerView(final BookJson book) {
 
-        String path = "file://" + Configuration.getMagazinesDirectory(this) + File.separator;
+        String path = "file://"
+                .concat(Configuration.getMagazinesDirectory(this))
+                .concat(File.separator)
+                .concat(book.getMagazineName());
 
         if (STANDALONE_MODE) {
-            path = "file:///android_asset".concat(File.separator)
-                    .concat(getString(R.string.sa_books_directory)).concat(File.separator);
+            path = "file:///android_asset"
+                    .concat(File.separator)
+                    .concat(getString(R.string.sa_books_directory))
+                    .concat(File.separator)
+                    .concat(book.getMagazineName());
         } else if (ENABLE_TUTORIAL) {
-            path = "file:///android_asset".concat(File.separator);
+            path = "file:///android_asset"
+                    .concat(File.separator)
+                    .concat("abaker_usage");
         }
 
         if (book.getLiveUrl() != null) {
@@ -527,7 +535,7 @@ public class MagazineActivity extends FragmentActivity {
 				return true;
 			}
 		});
-		viewIndex.loadUrl(path + book.getMagazineName() + File.separator
+		viewIndex.loadUrl(path + File.separator
 				+ "index.html");
         viewIndex.setBackgroundColor(0x00000000);
         viewIndex.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);

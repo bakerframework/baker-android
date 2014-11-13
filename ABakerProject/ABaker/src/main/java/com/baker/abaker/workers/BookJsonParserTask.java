@@ -53,12 +53,17 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
 		BookJson result  = null;
 		
 		String rawJson = "";
+        boolean online = false;
 		try {
             if ("ONLINE".equals(params[0])) {
-                Log.d(this.getClass().toString(), "Will parse the BookJson from the Live URL: " + this.magazine.getLiveUrl());
-
+                online = true;
                 DefaultHttpClient httpClient = new DefaultHttpClient();
-                HttpGet httpGet = new HttpGet(this.magazine.getLiveUrl() + "/" + this.context.getString(R.string.book));
+                String separator = "/";
+                String url = this.magazine.getLiveUrl()
+                        + separator
+                        + this.context.getString(R.string.book);
+                Log.d(this.getClass().toString(), "Will parse the BookJson from the Live URL: " + url);
+                HttpGet httpGet = new HttpGet(url);
                 HttpResponse response = httpClient.execute(httpGet);
                 if (null != response) {
 
@@ -121,8 +126,10 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
 		    if (valid) {
 			    Log.d(this.getClass().toString(), "Book.json is valid.");
 		    	result = new BookJson();
-                if (this.magazine.getLiveUrl() != null) {
-                    result.setLiveUrl(this.magazine.getLiveUrl() + "/");
+                if (online && this.magazine.getLiveUrl() != null) {
+                    result.setLiveUrl(this.magazine.getLiveUrl());
+                } else {
+                    result.setLiveUrl(null);
                 }
 		    	result.fromJson(rawJson);
 		    	result.setMagazineName(this.magazine.getName());

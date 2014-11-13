@@ -94,7 +94,8 @@ public class Configuration {
     /**
      * Empty constructor not to be used since the class is utils only.
      */
-	private Configuration() {}
+    private Configuration() {
+    }
 
     // Tries to use external storage, if not available then fallback to internal.
     public static String getFilesDirectory(Context context) {
@@ -120,12 +121,13 @@ public class Configuration {
         return filesPath;
     }
 
-	public static String getMagazinesDirectory(Context context) {
-		return getFilesDirectory(context) + File.separator + Configuration.MAGAZINES_FILES_DIR;
-	}
+    public static String getMagazinesDirectory(Context context) {
+        return getFilesDirectory(context) + File.separator + Configuration.MAGAZINES_FILES_DIR;
+    }
 
     /**
      * Gets the absolute cache dir for accessing files.
+     *
      * @param context
      * @return The absolute cache dir, either on external or internal storage.
      */
@@ -159,16 +161,16 @@ public class Configuration {
 
         return networkInfo.isConnected();
     }
-	
-	public static boolean hasNetworkConnection(Context context) {
-		ConnectivityManager cm = (ConnectivityManager) context
-				.getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo netInfo = cm.getActiveNetworkInfo();
-		if (netInfo != null && netInfo.isConnected()) {
-			return true;
-		}
-		return false;
-	}
+
+    public static boolean hasNetworkConnection(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnected()) {
+            return true;
+        }
+        return false;
+    }
 
     public static Map<String, String> splitUrlQueryString(URL url) throws UnsupportedEncodingException {
         Map<String, String> query_pairs = new LinkedHashMap<String, String>();
@@ -223,8 +225,10 @@ public class Configuration {
                 os.write(buffer, 0, length);
             }
         } finally {
-            is.close();
-            os.close();
+            if (is != null)
+                is.close();
+            if (os != null)
+                os.close();
         }
     }
 
@@ -234,7 +238,7 @@ public class Configuration {
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");
 
-        while((line = reader.readLine()) != null) {
+        while ((line = reader.readLine()) != null) {
             stringBuilder.append(line);
             stringBuilder.append(ls);
         }
