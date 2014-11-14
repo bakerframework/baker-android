@@ -19,6 +19,7 @@
     <string name="could_not_read_shelf">Could not read the shelf from the device</string>
     <string name="invalid_book_json">Invalid magazine package</string>
     <string name="cannot_view_online">No Internet access to view online</string>
+    <string name="cannot_download_issue">No Internet access to download the issue</string>
 
     <!-- Shelf URL -->
     <string name="newstand_manifest_url">http://bakerframework.com/demo/shelf.json</string>

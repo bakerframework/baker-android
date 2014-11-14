@@ -119,6 +119,11 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private final int BOOK_JSON_PARSE_TASK = 5;
     private final int CHECK_INTERNET_TASK = 6;
 
+    // This will be used to execute a task after checking internet.
+    private enum TASKS_AFTER_CHECK_INTERNET{DOWNLOAD_ISSUE, READ_ONLINE}
+
+    private TASKS_AFTER_CHECK_INTERNET TASK = TASKS_AFTER_CHECK_INTERNET.DOWNLOAD_ISSUE;
+
     private Activity activity;
 
     /**
@@ -222,7 +227,8 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                     if (readable && !MagazineThumb.this.isDownloading()) {
                         readIssue();
                     } else if (!MagazineThumb.this.isDownloading()) {
-                        startPackageDownload();
+                        TASK = TASKS_AFTER_CHECK_INTERNET.DOWNLOAD_ISSUE;
+                        MagazineThumb.this.checkInternetAccess();
                     }
                 }
 
@@ -232,7 +238,8 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         //Click on download button
         findViewById(R.id.btnDownload).setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                startPackageDownload();
+                TASK = TASKS_AFTER_CHECK_INTERNET.DOWNLOAD_ISSUE;
+                MagazineThumb.this.checkInternetAccess();
             }
         });
 
@@ -261,6 +268,7 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             findViewById(R.id.btnPreview).setVisibility(View.VISIBLE);
             findViewById(R.id.btnPreview).setOnClickListener(new OnClickListener() {
                 public void onClick(View v) {
+                    TASK = TASKS_AFTER_CHECK_INTERNET.READ_ONLINE;
                     MagazineThumb.this.checkInternetAccess();
                 }
             });
@@ -624,11 +632,21 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                 break;
             case CHECK_INTERNET_TASK:
                 if (results[0].equals("TRUE")) {
-                    this.readOnline();
+                    if (TASK == TASKS_AFTER_CHECK_INTERNET.DOWNLOAD_ISSUE) {
+                        this.startPackageDownload();
+                    } else {
+                        this.readOnline();
+                    }
                 } else {
-                    Log.e(this.getClass().toString(), "Cannot view issue online. No internet access");
-                    Toast.makeText(this.getContext(), this.getContext().getString(R.string.cannot_view_online),
-                            Toast.LENGTH_LONG).show();
+                    if (TASK == TASKS_AFTER_CHECK_INTERNET.DOWNLOAD_ISSUE) {
+                        Log.e(this.getClass().toString(), "No Internet access to download the issue.");
+                        Toast.makeText(this.getContext(), this.getContext().getString(R.string.cannot_download_issue),
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Log.e(this.getClass().toString(), "Cannot view issue online. No internet access.");
+                        Toast.makeText(this.getContext(), this.getContext().getString(R.string.cannot_view_online),
+                                Toast.LENGTH_LONG).show();
+                    }
                 }
 
                 break;
