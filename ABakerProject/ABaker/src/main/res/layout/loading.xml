@@ -5,9 +5,40 @@
     android:gravity="center|center_horizontal|center_vertical"
     android:orientation="vertical" >
 
-    <WebView
-        android:id="@+id/loadingWebView"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
 
+        <WebView
+            android:id="@+id/loadingWebView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="bottom"
+            android:padding="2dp"
+            android:visibility="gone"
+            android:id="@+id/downloadExtraFiles">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sa_downloading_expansion"
+                android:textColor="#FFAF160E"
+                android:id="@+id/expansionTextView" />
+
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="5dp"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressDrawable="@drawable/progressbar"
+                android:indeterminate="false"
+                android:max="100"
+                android:id="@+id/expansionProgressBar" />
+
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

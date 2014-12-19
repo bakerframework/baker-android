@@ -108,6 +108,13 @@
     <!-- Strings for the standalone mode -->
     <string name="sa_books_directory">books</string>
     <string name="sa_no_issues">No issues found.</string>
+    <string name="sa_downloading_expansion">Downloading additional files</string>
+    <string name="sa_extracting_expansion">Extracting data</string>
+    <string name="sa_cannot_download_expansion">Could not download the expansion file.</string>
+    <string name="sa_download_paused_roaming">Download was paused because you are roaming.</string>
+    <string name="sa_download_paused_cellular">Download was paused because you are on a cellular network.</string>
+    <string name="sa_download_paused_wifi_unavailable">Download paused because Wi-Fi is unavailable.</string>
+    <string name="sa_download_failed">Download could not be completed.</string>
 
     <!-- Strings for the usage tutorial -->
     <string name="ut_directory">abaker_usage</string>

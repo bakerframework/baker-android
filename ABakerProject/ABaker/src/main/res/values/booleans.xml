@@ -3,6 +3,19 @@
     <!-- Set to true if you want ABaker to run as standalone app, loading the issues files from "assets/books"-->
     <bool name="run_as_standalone">false</bool>
 
+    <!-- Allow the standalone mode to read from the App's internal magazines directory. -->
+    <bool name="sa_read_from_custom_directory">false</bool>
+
+    <!-- By default, the application will try to use it's internal versionCode to determine
+     the expansion file, but, if you have already uploaded an APK with an expansion file, and
+     you want to use that expansion file with a new version of your APK, there won't be a match
+     because the application will try to find an expansion file with the version number of the
+     new APK and the expansion file will keep the version of the first time it was uploaded
+     along the old APK. So, if you wish to use that file (to avoid re-upload a new expansion file)
+     then set this to true and set the version number of the expansion file by modifying
+     "sa_expansion_file_custom_version" in "integers.xml"-->
+    <bool name="sa_use_expansion_file_custom_version">false</bool>
+
     <!-- When opening ABaker for the very first time, show the users some features so they know how to use the app. -->
     <bool name="ut_enable_tutorial">true</bool>
 

@@ -10,12 +10,16 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Required to check whether Wi-Fi is enabled -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.android.vending.BILLING" />
+    <!-- Required to access Google Play Licensing -->
+    <uses-permission android:name="com.android.vending.CHECK_LICENSE" />
 
     <permission
         android:name="com.baker.abaker.permission.C2D_MESSAGE"
@@ -23,16 +27,18 @@
 
     <uses-permission android:name="com.baker.abaker.permission.C2D_MESSAGE" />
 
+    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <application
+        android:name="com.baker.abaker.ABakerApp"
         android:allowBackup="true"
+        android:allowClearUserData="true"
+        android:debuggable="false"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:windowSoftInputMode="adjustPan"
         android:vmSafeMode="true"
-        android:allowClearUserData="true"
-        android:name="com.baker.abaker.ABakerApp"
-        android:debuggable="false" >
+        android:windowSoftInputMode="adjustPan" >
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -44,6 +50,7 @@
             android:theme="@style/custom_actionbar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -93,6 +100,9 @@
                 <category android:name="com.baker.abaker" />
             </intent-filter>
         </receiver>
+
+        <service android:name="com.baker.abaker.ABakerDownloaderService" />
+        <receiver android:name="com.baker.abaker.ABakerAlarmReceiver" />
     </application>
 
 </manifest>

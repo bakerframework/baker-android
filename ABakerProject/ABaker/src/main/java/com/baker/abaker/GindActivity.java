@@ -33,6 +33,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -41,8 +42,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Color;
-import android.opengl.GLSurfaceView;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -55,6 +57,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baker.abaker.client.GindMandator;
@@ -68,9 +72,16 @@ import com.baker.abaker.workers.BookJsonParserTask;
 import com.baker.abaker.workers.CheckInternetTask;
 import com.baker.abaker.workers.DownloaderTask;
 import com.baker.abaker.workers.GCMRegistrationWorker;
+import com.baker.abaker.workers.UnzipperTask;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.vending.expansion.downloader.DownloadProgressInfo;
+import com.google.android.vending.expansion.downloader.DownloaderClientMarshaller;
+import com.google.android.vending.expansion.downloader.DownloaderServiceMarshaller;
+import com.google.android.vending.expansion.downloader.IDownloaderClient;
+import com.google.android.vending.expansion.downloader.IDownloaderService;
+import com.google.android.vending.expansion.downloader.IStub;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,7 +102,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class GindActivity extends Activity implements GindMandator {
+public class GindActivity extends Activity implements GindMandator, IDownloaderClient {
 
     /**
      * Code used when the MagazineActivity finishes, so we can evaluate if we need to close this
@@ -112,6 +123,7 @@ public class GindActivity extends Activity implements GindMandator {
     private final int REGISTRATION_TASK = 1;
     private final int CHECK_INTERNET_TASK = 2;
     private final int BOOK_JSON_PARSE_TASK = 3;
+    private final int UNZIP_CUSTOM_STANDALONE = 4;
 
     // For Google Cloud Messaging
     private GoogleCloudMessaging gcm;
@@ -128,6 +140,11 @@ public class GindActivity extends Activity implements GindMandator {
     public static String userAccount = "";
 
     private boolean isLoading = true;
+    private boolean expansionFileDownloadFinished = false;
+
+    private IStub downloaderStub;
+    private IDownloaderService downloaderInterface;
+    private UnzipperTask standaloneUnzipper;
 
     /**
      * Used when running in standalone mode based on the run_as_standalone setting in booleans.xml.
@@ -227,6 +244,9 @@ public class GindActivity extends Activity implements GindMandator {
 
     @Override
     protected void onResume() {
+        if (null != downloaderStub) {
+            downloaderStub.connect(this);
+        }
         super.onResume();
         checkPlayServices();
     }
@@ -257,7 +277,36 @@ public class GindActivity extends Activity implements GindMandator {
     }
 
     private void activateStandalone() {
-        ArrayList<String> issues = this.getValidIssuesAssets();
+        ArrayList<String> issues;
+        boolean fromAssets = !this.getResources().getBoolean(R.bool.sa_read_from_custom_directory);
+        if (fromAssets) {
+            issues = this.getValidIssuesAssets();
+            this.readStandaloneIssues(issues);
+        } else {
+            if (this.expansionFileExists()) {
+                Log.d(this.getClass().getName(), "The expansion file exists.");
+                File directory = new File(Configuration.getMagazinesDirectory(this));
+                if (directory.exists() && (directory.list().length > 0)) {
+                    if (this.getExtractionFinished()) {
+                        Log.d(this.getClass().getName(), "Magazines directory not empty and extraction finished.");
+                        this.getValidIssuesFromSharedStorage();
+                    } else {
+                        Log.d(this.getClass().getName(), "Magazines directory not empty but the extraction did not finished. Trying again.");
+                        this.extractFromExpansionFile();
+                    }
+                } else {
+                    Log.d(this.getClass().getName(), "No magazines detected on the magazines directory.");
+                    this.saveExtractionFinished(false);
+                    this.extractFromExpansionFile();
+                }
+            } else {
+                Log.d(this.getClass().getName(), "The expansion file does not exist.");
+                this.downloadExpansionFile();
+            }
+        }
+    }
+
+    private void readStandaloneIssues(final ArrayList<String> issues) {
         Log.d(this.getClass().getName(), "Found " + issues.size() + " issues.");
         if (issues.size() == 1) {
             RETURN_TO_SHELF = false;
@@ -269,6 +318,7 @@ public class GindActivity extends Activity implements GindMandator {
                     magazine,
                     this,
                     BOOK_JSON_PARSE_TASK);
+            parser.setFromAssets(false);
             parser.execute("STANDALONE");
         } else if (issues.size() > 1) {
             JSONArray jsonArray = new JSONArray();
@@ -285,7 +335,8 @@ public class GindActivity extends Activity implements GindMandator {
     }
 
     private JSONObject getIssueData(final String issueName) {
-        final String books = getString(R.string.sa_books_directory);
+        String books;
+        boolean fromAssets = !this.getResources().getBoolean(R.bool.sa_read_from_custom_directory);
         final String bookJson = "book.json";
         JSONObject result = new JSONObject();
 
@@ -295,10 +346,19 @@ public class GindActivity extends Activity implements GindMandator {
 
             AssetManager assetManager = getAssets();
 
-            String bookJsonPath = books.concat(File.separator)
-                    .concat(issueName).concat(File.separator)
+            String bookJsonPath = issueName.concat(File.separator)
                     .concat(bookJson);
-            reader = new BufferedReader(new InputStreamReader(assetManager.open(bookJsonPath)));
+
+            if (fromAssets) {
+                books = getString(R.string.sa_books_directory).concat(File.separator)
+                        .concat(bookJsonPath);
+                reader = new BufferedReader(new InputStreamReader(assetManager.open(books)));
+            } else {
+                books = Configuration.getMagazinesDirectory(this).concat(File.separator)
+                        .concat(bookJsonPath);
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(books)));
+            }
+
 
             String line = "";
             StringBuilder jsonString = new StringBuilder();
@@ -350,6 +410,103 @@ public class GindActivity extends Activity implements GindMandator {
             Log.e(this.getClass().getName(), "Error getting issues from assets", ex);
         }
         return issues;
+    }
+
+    private void getValidIssuesFromSharedStorage() {
+        ArrayList<String> issues = new ArrayList<String>();
+        File directory = new File(Configuration.getMagazinesDirectory(this));
+        String bookJson;
+
+        if (directory.exists() && directory.isDirectory()) {
+            for (String subdir : directory.list()) {
+                Log.d(this.getClass().getName(), "Searching for book.json in subdirectory: " + subdir);
+                bookJson = directory.getPath().concat(File.separator)
+                        .concat(subdir).concat(File.separator).concat("book.json");
+                if (new File(bookJson).exists()) {
+                    Log.d(this.getClass().getName(), "Detected book.json file in " + subdir);
+                    issues.add(new File(subdir).getPath());
+                }
+            }
+        }
+
+        if (issues.isEmpty()) {
+            Log.d(this.getClass().getName(), "Issue list read is empty.");
+        }
+
+        this.hideDownloadingExtraFiles();
+        this.readStandaloneIssues(issues);
+    }
+
+    private void extractFromExpansionFile() {
+        boolean usingCustomCode = getResources().getBoolean(R.bool.sa_use_expansion_file_custom_version);
+        int versionCode;
+
+        if (usingCustomCode) {
+            versionCode = getResources().getInteger(R.integer.sa_expansion_file_custom_version);
+        } else {
+            versionCode = Configuration.getApplicationVersionCode(this);
+        }
+
+        final String path = Configuration.getSharedStorageDirectory().concat(File.separator)
+                .concat("Android").concat(File.separator)
+                .concat("obb").concat(File.separator)
+                .concat(getPackageName()).concat(File.separator);
+        final String expansionFileNameNoExtension = "main."
+                .concat(String.valueOf(versionCode)).concat(".")
+                .concat(getPackageName());
+
+        final String expansionFilePath = path + expansionFileNameNoExtension.concat(".obb");
+
+        this.showExtractingExpansion();
+
+        Log.d(this.getClass().getName(), "Initiating extraction of the expansion file...");
+        standaloneUnzipper = new UnzipperTask(this, this, UNZIP_CUSTOM_STANDALONE);
+        standaloneUnzipper.setAbsoluteOutputDirectory(true);
+        standaloneUnzipper.setDeleteZipFile(false);
+        standaloneUnzipper.execute(expansionFilePath, Configuration.getMagazinesDirectory(this));
+    }
+
+    private boolean expansionFileExists() {
+        boolean usingCustomCode = getResources().getBoolean(R.bool.sa_use_expansion_file_custom_version);
+        int versionCode;
+
+        if (usingCustomCode) {
+            versionCode = getResources().getInteger(R.integer.sa_expansion_file_custom_version);
+        } else {
+            versionCode = Configuration.getApplicationVersionCode(this);
+        }
+
+        final String path = Configuration.getSharedStorageDirectory().concat(File.separator)
+                .concat("Android").concat(File.separator)
+                .concat("obb").concat(File.separator)
+                .concat(getPackageName()).concat(File.separator);
+        final String expansionFileNameNoExtension = "main."
+                .concat(String.valueOf(versionCode)).concat(".")
+                .concat(getPackageName());
+
+        final String expansionFilePath = path + expansionFileNameNoExtension.concat(".obb");
+
+        return (new File(expansionFilePath).exists());
+    }
+
+    private void downloadExpansionFile() {
+        try {
+            Intent notifierIntent = new Intent(this, GindActivity.class);
+            notifierIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pendingIntent = PendingIntent
+                    .getActivity(this, 0, notifierIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            int result = DownloaderClientMarshaller
+                    .startDownloadServiceIfRequired(this, pendingIntent, ABakerDownloaderService.class);
+            if (result != DownloaderClientMarshaller.NO_DOWNLOAD_REQUIRED) {
+                Log.d(this.getClass().getName(), "Creating downloader stub.");
+                downloaderStub = DownloaderClientMarshaller
+                        .CreateStub(this, ABakerDownloaderService.class);
+                this.showDownloadingExtraFiles();
+            }
+        } catch (PackageManager.NameNotFoundException ex) {
+            Log.e(this.getClass().getName(), "Failed to download the expansion file: ", ex);
+            finish();
+        }
     }
 
     private boolean hasBookJson(final String issuePath) {
@@ -530,7 +687,19 @@ public class GindActivity extends Activity implements GindMandator {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(Configuration.PROPERTY_REG_ID, regId);
         editor.putInt(Configuration.PROPERTY_APP_VERSION, appVersion);
-        editor.commit();
+        editor.apply();
+    }
+
+    private void saveExtractionFinished(boolean state) {
+        final SharedPreferences preferences = this.getPreferences(this.getApplicationContext());
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(Configuration.EXTRACTION_FINISHED, state);
+        editor.apply();
+    }
+
+    private boolean getExtractionFinished() {
+        SharedPreferences preferences = this.getPreferences(this.getApplicationContext());
+        return preferences.getBoolean(Configuration.EXTRACTION_FINISHED, false);
     }
 
     private void loadBackground() {
@@ -549,7 +718,9 @@ public class GindActivity extends Activity implements GindMandator {
     }
 
     private void loadingScreen() {
+        Log.d(this.getClass().getName(), "Showing loading screen.");
         setContentView(R.layout.loading);
+
         WebView webview = (WebView) findViewById(R.id.loadingWebView);
         webview.getSettings().setJavaScriptEnabled(true);
         webview.getSettings().setUseWideViewPort(true);
@@ -777,8 +948,6 @@ public class GindActivity extends Activity implements GindMandator {
     public void updateProgress(final int taskId, Long... progress) {
     }
 
-    ;
-
     /**
      * This will manage all the task post execute actions
      *
@@ -837,7 +1006,10 @@ public class GindActivity extends Activity implements GindMandator {
                 } catch (ParseException ex) {
                     Log.e(this.getClass().getName(), "Error parsing the book.json", ex);
                 }
-
+                break;
+            case UNZIP_CUSTOM_STANDALONE:
+                this.saveExtractionFinished(true);
+                this.getValidIssuesFromSharedStorage();
                 break;
         }
     }
@@ -932,6 +1104,9 @@ public class GindActivity extends Activity implements GindMandator {
 
     @Override
     public void onStop() {
+        if (null != downloaderStub) {
+            downloaderStub.disconnect(this);
+        }
         super.onStop();
     }
 
@@ -983,5 +1158,73 @@ public class GindActivity extends Activity implements GindMandator {
             MagazineThumb thumb = (MagazineThumb) flowLayout.getChildAt(id);
             thumb.getPackDownloader().cancelDownload();
         }
+    }
+
+    private void showDownloadingExtraFiles() {
+        findViewById(R.id.downloadExtraFiles).setVisibility(View.VISIBLE);
+    }
+
+    private void hideDownloadingExtraFiles() {
+        findViewById(R.id.downloadExtraFiles).setVisibility(View.GONE);
+    }
+
+    private void showExtractingExpansion() {
+        ((TextView) findViewById(R.id.expansionTextView)).setText(getString(R.string.sa_extracting_expansion));
+        findViewById(R.id.downloadExtraFiles).setVisibility(View.VISIBLE);
+        ((ProgressBar) findViewById(R.id.expansionProgressBar)).setProgress(100);
+
+    }
+
+    @Override
+    public void onServiceConnected(Messenger m) {
+        Log.d(this.getClass().getName(), "Downloader service connected.");
+        downloaderInterface = DownloaderServiceMarshaller.CreateProxy(m);
+        downloaderInterface.onClientUpdated(downloaderStub.getMessenger());
+    }
+
+    @Override
+    public void onDownloadStateChanged(int newState) {
+        Log.d(this.getClass().getName(), "Expansion file download state changed: " + newState);
+        switch (newState) {
+            case IDownloaderClient.STATE_PAUSED_ROAMING:
+                this.showToast(getString(R.string.sa_download_paused_roaming));
+                break;
+            case IDownloaderClient.STATE_PAUSED_NEED_WIFI:
+                this.showToast(getString(R.string.sa_download_paused_wifi_unavailable));
+                break;
+            case IDownloaderClient.STATE_PAUSED_NEED_CELLULAR_PERMISSION:
+                this.showToast(getString(R.string.sa_download_paused_wifi_unavailable));
+                break;
+            case IDownloaderClient.STATE_FAILED:
+                this.showToast(getString(R.string.sa_download_failed));
+                break;
+            case IDownloaderClient.STATE_COMPLETED:
+                if (!expansionFileDownloadFinished) {
+                    expansionFileDownloadFinished = true;
+                    this.extractFromExpansionFile();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onDownloadProgress(DownloadProgressInfo progress) {
+        int percent = ((int)(progress.mOverallProgress * 100 / progress.mOverallTotal));
+        Log.d(this.getClass().getName(), "Downloading expansion file, progress: " + percent + " %");
+        this.updateDownloadExpansionProgressUI(percent);
+    }
+
+    private void updateDownloadExpansionProgressUI(int percent) {
+        // Update UI
+        TextView expansionTextView = ((TextView) findViewById(R.id.expansionTextView));
+        String text = getString(R.string.sa_downloading_expansion);
+        expansionTextView.setText(text + " " + percent + " %");
+        ((ProgressBar) findViewById(R.id.expansionProgressBar)).setProgress(percent);
+    }
+
+    private void showToast(final String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 }

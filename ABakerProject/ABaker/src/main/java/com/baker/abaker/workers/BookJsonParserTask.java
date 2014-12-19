@@ -36,7 +36,17 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
 
     private int taskId;
 
-	public BookJsonParserTask(Context _context) {
+    private boolean fromAssets = true;
+
+    public boolean isFromAssets() {
+        return fromAssets;
+    }
+
+    public void setFromAssets(boolean fromAssets) {
+        this.fromAssets = fromAssets;
+    }
+
+    public BookJsonParserTask(Context _context) {
 		this.magazinesDirectory = Configuration.getMagazinesDirectory(_context);
 	}
 	
@@ -81,13 +91,23 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
                 Log.d(this.getClass().getName(), "Will parse the BookJson from the assets directory." );
 
                 AssetManager assetManager = this.context.getAssets();
-                String bookJsonPath = this.context.getString(R.string.sa_books_directory)
-                        .concat(File.separator)
-                        .concat(this.magazine.getName())
+
+                String books;
+                String bookJsonPath = this.magazine.getName()
                         .concat(File.separator)
                         .concat("book.json");
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(assetManager.open(bookJsonPath)));
+                BufferedReader reader;
+                if (this.isFromAssets()) {
+                    books = this.context.getString(R.string.sa_books_directory);
+                    bookJsonPath = books.concat(File.separator).concat(bookJsonPath);
+                    reader = new BufferedReader(
+                            new InputStreamReader(assetManager.open(bookJsonPath)));
+                } else {
+                    books = Configuration.getMagazinesDirectory(this.context);
+                    bookJsonPath = books.concat(File.separator).concat(bookJsonPath);
+                    reader = new BufferedReader(
+                            new InputStreamReader(new FileInputStream(bookJsonPath)));
+                }
 
                 StringBuilder sb = new StringBuilder();
                 String line;

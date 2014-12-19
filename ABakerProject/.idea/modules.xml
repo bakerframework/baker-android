@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ABaker/ABaker.iml" filepath="$PROJECT_DIR$/ABaker/ABaker.iml" />
       <module fileurl="file://$PROJECT_DIR$/ABakerProject.iml" filepath="$PROJECT_DIR$/ABakerProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/GooglePlayDownloader/GooglePlayDownloader.iml" filepath="$PROJECT_DIR$/GooglePlayDownloader/GooglePlayDownloader.iml" />
+      <module fileurl="file://$PROJECT_DIR$/GooglePlayLicence/GooglePlayLicence.iml" filepath="$PROJECT_DIR$/GooglePlayLicence/GooglePlayLicence.iml" />
     </modules>
   </component>
 </project>

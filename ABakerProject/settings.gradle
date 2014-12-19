@@ -1,1 +1,3 @@
 include 'ABaker'
+include ':GooglePlayLicence'
+include ':GooglePlayDownloader'

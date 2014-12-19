@@ -51,7 +51,7 @@ public class CheckInternetTask extends AsyncTask<String, Long, String> {
     public boolean hasInternetConnection() {
         boolean result;
         try {
-            final int timeout = Integer.parseInt(this.context.getString(R.integer.check_internet_timeout));
+            final int timeout = this.context.getResources().getInteger(R.integer.check_internet_timeout);
             final String host = this.context.getString(R.string.check_internet_with_host);
 
             Log.d(this.getClass().toString(), "TESTING INTERNET CONNECTION WITH HOST " + host + " AND TIMEOUT " + timeout);

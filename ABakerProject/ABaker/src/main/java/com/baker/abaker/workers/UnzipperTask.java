@@ -25,8 +25,28 @@ public class UnzipperTask extends AsyncTask<String, Long, String> {
 
     private boolean resumed;
 
+    private boolean absoluteOutputDirectory = false;
+
+    private boolean deleteZipFile = true;
+
     public void setResumed(final boolean _resumed) {
         this.resumed = _resumed;
+    }
+
+    public boolean isAbsoluteOutputDirectory() {
+        return absoluteOutputDirectory;
+    }
+
+    public boolean isDeleteZipFile() {
+        return deleteZipFile;
+    }
+
+    public void setDeleteZipFile(boolean deleteZipFile) {
+        this.deleteZipFile = deleteZipFile;
+    }
+
+    public void setAbsoluteOutputDirectory(boolean absoluteOutputDirectory) {
+        this.absoluteOutputDirectory = absoluteOutputDirectory;
     }
 
     public UnzipperTask(Context context, GindMandator mandator, final int taskId) {
@@ -43,7 +63,11 @@ public class UnzipperTask extends AsyncTask<String, Long, String> {
             Log.d(this.getClass().getName(), "Started unzip process for file " + params[0]);
 
             // First we create a directory to hold the unzipped files.
-            workingDir = params[0].substring(0, params[0].lastIndexOf("/")) + File.separator;
+            if (this.isAbsoluteOutputDirectory()) {
+                workingDir = "";
+            } else {
+                workingDir = params[0].substring(0, params[0].lastIndexOf(File.separator)) + File.separator;
+            }
             File containerDir = new File(workingDir + params[1]);
 
             Log.d(this.getClass().getName(), "Magazine Directory: " + containerDir);
@@ -107,9 +131,11 @@ public class UnzipperTask extends AsyncTask<String, Long, String> {
                     fileOutputStream = null;
                 }
             }
-            // Delete the zip file
-            File zipFile = new File(inputFile);
-            zipFile.delete();
+            if (this.isDeleteZipFile()) {
+                // Delete the zip file
+                File zipFile = new File(inputFile);
+                zipFile.delete();
+            }
 
         } finally {
             try {

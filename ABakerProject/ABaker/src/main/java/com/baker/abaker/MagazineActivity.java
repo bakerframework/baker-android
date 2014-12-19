@@ -364,11 +364,14 @@ public class MagazineActivity extends FragmentActivity {
                 .concat(book.getMagazineName());
 
         if (STANDALONE_MODE) {
-            path = "file:///android_asset"
-                    .concat(File.separator)
-                    .concat(getString(R.string.sa_books_directory))
-                    .concat(File.separator)
-                    .concat(book.getMagazineName());
+            boolean fromAssets = !this.getResources().getBoolean(R.bool.sa_read_from_custom_directory);
+            if (fromAssets) {
+                path = "file:///android_asset"
+                        .concat(File.separator)
+                        .concat(getString(R.string.sa_books_directory))
+                        .concat(File.separator)
+                        .concat(book.getMagazineName());
+            }
         } else if (ENABLE_TUTORIAL) {
             path = "file:///android_asset"
                     .concat(File.separator)

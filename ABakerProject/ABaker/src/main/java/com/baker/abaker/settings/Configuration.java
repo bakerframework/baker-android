@@ -28,6 +28,7 @@
 package com.baker.abaker.settings;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Environment;
@@ -61,6 +62,7 @@ public class Configuration {
     public final static String PROPERTY_REG_ID = "com.baker.abaker.REGISTRATION_ID";
     public final static String DOWNLOAD_IN_PROGRESS = "com.baker.abaker.DOWNLOAD_ID";
     public final static String PROPERTY_APP_VERSION = "com.baker.abaker.APP_VERSION";
+    public final static String EXTRACTION_FINISHED = "com.baker.abaker.EXTRACTION_FINISHED";
 
     public final static String FIRST_TIME_RUN = "com.baker.abaker.FIRST_TIME_RUN";
 
@@ -153,6 +155,37 @@ public class Configuration {
             cachePath = context.getCacheDir().getPath();
         }
         return cachePath;
+    }
+
+    public static String getSharedStorageDirectory() {
+        String sharedDirectory;
+        String state = Environment.getExternalStorageState();
+
+        if (Environment.MEDIA_MOUNTED.equals(state) && !Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            File externalStorageDir = Environment.getExternalStorageDirectory();
+            if (null != externalStorageDir) {
+                sharedDirectory = externalStorageDir.getPath();
+            } else {
+                Log.d(LOG_TITLE, "EXTERNAL STORAGE IS *NOT* AVAILABLE.");
+                sharedDirectory = "";
+            }
+        } else {
+            Log.d(LOG_TITLE, "EXTERNAL STORAGE IS *NOT* AVAILABLE.");
+            sharedDirectory = "";
+        }
+
+        return sharedDirectory;
+    }
+
+    public static int getApplicationVersionCode(Context context) {
+        int versionCode;
+        try {
+            versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(LOG_TITLE, "The version code could not be obtained.");
+            versionCode = -1;
+        }
+        return versionCode;
     }
 
     public static boolean connectionIsWiFi(Context context) {
