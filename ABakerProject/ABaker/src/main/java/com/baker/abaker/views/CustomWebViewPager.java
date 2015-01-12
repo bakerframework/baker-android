@@ -36,10 +36,12 @@ public class CustomWebViewPager extends ViewPager {
 
     public CustomWebViewPager(Context context) {
 		super(context);
+        this.setOffscreenPageLimit(5);
 	}
 
 	public CustomWebViewPager(Context context, AttributeSet attrs) {
 		super(context, attrs);
+        this.setOffscreenPageLimit(5);
 	}
 
 	@Override

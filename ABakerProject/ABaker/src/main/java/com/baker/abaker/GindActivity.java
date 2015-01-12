@@ -44,6 +44,8 @@ import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -145,6 +147,10 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     private IStub downloaderStub;
     private IDownloaderService downloaderInterface;
     private UnzipperTask standaloneUnzipper;
+    private DownloaderTask shelfDownloader;
+    private BookJsonParserTask bookJsonParserTask;
+
+    private ArrayList<Integer> thumbnailIds = new ArrayList<>();
 
     /**
      * Used when running in standalone mode based on the run_as_standalone setting in booleans.xml.
@@ -155,6 +161,16 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
      * If running in standalone mode and only one issue is present, this will be set to false, causing the app to finish.
      */
     private boolean RETURN_TO_SHELF = true;
+
+    private Handler thumbnailDownloaderHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message message) {
+            if (message.what == 1) {
+                GindActivity.this.downloadNextThumbnail();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,7 +234,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
                 checkInternetTask.execute();
             }
 
-            SharedPreferences sharedPreferences = this.getPreferences(this);
+            SharedPreferences sharedPreferences = this.getPreferences();
             if (sharedPreferences.getBoolean(Configuration.FIRST_TIME_RUN, true) && getResources().getBoolean(R.bool.ut_enable_tutorial)) {
                 //the app is being launched for first time, do something
                 Log.d(this.getClass().getName(), "First time app running, launching tutorial.");
@@ -313,13 +329,14 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
             Magazine magazine = new Magazine();
             magazine.setName(issues.get(0));
             magazine.setStandalone(STANDALONE_MODE);
-            BookJsonParserTask parser = new BookJsonParserTask(
+            boolean fromAssets = !this.getResources().getBoolean(R.bool.sa_read_from_custom_directory);
+            bookJsonParserTask = new BookJsonParserTask(
                     this,
                     magazine,
                     this,
                     BOOK_JSON_PARSE_TASK);
-            parser.setFromAssets(false);
-            parser.execute("STANDALONE");
+            bookJsonParserTask.setFromAssets(fromAssets);
+            bookJsonParserTask.execute("STANDALONE");
         } else if (issues.size() > 1) {
             JSONArray jsonArray = new JSONArray();
             for (String issue : issues) {
@@ -522,8 +539,10 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
             result = false;
         } finally {
             try {
-                inputStream.close();
-            } catch (Exception e) {
+                if (null != inputStream) {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
                 Log.e(this.getClass().getName(), "Error opening the book.json for " + issuePath);
             }
         }
@@ -532,7 +551,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     }
 
     public void downloadNewShelf() {
-        DownloaderTask downloadShelf = new DownloaderTask(
+        shelfDownloader = new DownloaderTask(
                 this.getApplicationContext(),
                 this,
                 this.DOWNLOAD_SHELF_FILE,
@@ -542,7 +561,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
                 this.shelfFileDescription,
                 Configuration.getCacheDirectory(this),
                 this.shelfFileVisibility);
-        downloadShelf.execute();
+        shelfDownloader.execute();
     }
 
     public void useBackupShelf() {
@@ -565,6 +584,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
                 this.finish();
             }
         } catch (IOException ex) {
+            Log.e(this.getClass().getName(), "Exception while trying to use the backup shelf.", ex);
             Toast.makeText(this, this.getString(R.string.could_not_read_shelf),
                     Toast.LENGTH_LONG).show();
             this.finish();
@@ -632,7 +652,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     }
 
     private String getRegistrationId(Context context) {
-        final SharedPreferences prefs = getPreferences(context);
+        final SharedPreferences prefs = getPreferences();
         String regId = prefs.getString(Configuration.PROPERTY_REG_ID, "");
         if (regId.isEmpty()) {
             Log.d(this.getClass().toString(), "Registration ID not found.");
@@ -673,7 +693,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     /**
      * @return Application's {@code SharedPreferences}.
      */
-    private SharedPreferences getPreferences(Context context) {
+    private SharedPreferences getPreferences() {
         // This sample app persists the registration ID in shared preferences, but
         // how you store the regID in your app is up to you.
         return getSharedPreferences(GindActivity.class.getSimpleName(),
@@ -681,7 +701,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     }
 
     private void storeRegistrationId(Context context, String regId) {
-        final SharedPreferences prefs = getPreferences(context);
+        final SharedPreferences prefs = getPreferences();
         int appVersion = getAppVersion(context);
         Log.i(this.getClass().toString(), "Saving regId on app version " + appVersion);
         SharedPreferences.Editor editor = prefs.edit();
@@ -691,14 +711,14 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     }
 
     private void saveExtractionFinished(boolean state) {
-        final SharedPreferences preferences = this.getPreferences(this.getApplicationContext());
+        final SharedPreferences preferences = this.getPreferences();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(Configuration.EXTRACTION_FINISHED, state);
         editor.apply();
     }
 
     private boolean getExtractionFinished() {
-        SharedPreferences preferences = this.getPreferences(this.getApplicationContext());
+        SharedPreferences preferences = this.getPreferences();
         return preferences.getBoolean(Configuration.EXTRACTION_FINISHED, false);
     }
 
@@ -753,6 +773,15 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
         webview.loadUrl(getString(R.string.headerUrl));
     }
 
+    private void downloadNextThumbnail() {
+        if (!this.thumbnailIds.isEmpty() && this.thumbnailDownloaderHandler != null) {
+            int id = this.thumbnailIds.get(0);
+            MagazineThumb thumb = (MagazineThumb) findViewById(id);
+            thumb.downloadCover();
+            this.thumbnailIds.remove(0);
+        }
+    }
+
     public void createThumbnails(final JSONArray jsonArray) {
         Log.d(this.getClass().getName(),
                 "Shelf json contains " + jsonArray.length() + " elements.");
@@ -783,7 +812,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
                         LinearLayout.LayoutParams.MATCH_PARENT, 1));
                 inner.setGravity(Gravity.CENTER_HORIZONTAL);
 
-                //Building magazine data
+                // Building magazine data
                 Date date = sdfInput.parse(json.getString("date"));
                 String dateString = sdfOutput.format(date);
                 int size = 0;
@@ -791,15 +820,15 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
 
                 String encoding = "UTF-8";
 
-                Magazine mag = new Magazine();
-                mag.setName(new String(json.getString("name").getBytes(encoding), encoding));
-                mag.setTitle(new String(json.getString("title").getBytes(encoding), encoding));
-                mag.setInfo(new String(json.getString("info").getBytes(encoding), encoding));
-                mag.setDate(dateString);
-                mag.setSize(size);
-                mag.setCover(new String(json.getString("cover").getBytes(encoding), encoding));
-                mag.setUrl(new String(json.getString("url").getBytes(encoding), encoding));
-                mag.setStandalone(STANDALONE_MODE);
+                Magazine magazine = new Magazine();
+                magazine.setName(new String(json.getString("name").getBytes(encoding), encoding));
+                magazine.setTitle(new String(json.getString("title").getBytes(encoding), encoding));
+                magazine.setInfo(new String(json.getString("info").getBytes(encoding), encoding));
+                magazine.setDate(dateString);
+                magazine.setSize(size);
+                magazine.setCover(new String(json.getString("cover").getBytes(encoding), encoding));
+                magazine.setUrl(new String(json.getString("url").getBytes(encoding), encoding));
+                magazine.setStandalone(STANDALONE_MODE);
 
                 if (json.has("liveUrl")) {
                     String liveUrl = new String(json.getString("liveUrl").getBytes(encoding), encoding);
@@ -809,25 +838,30 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
                         liveUrl = liveUrl.substring(0, liveUrl.length() - 1);
                     }
 
-                    mag.setLiveUrl(liveUrl);
+                    magazine.setLiveUrl(liveUrl);
 
                     Log.d(this.getClass().toString(), "The liveUrl for the magazine "
-                            + mag.getName() + " will be " + liveUrl);
+                            + magazine.getName() + " will be " + liveUrl);
                 }
 
-                //Starting the ThumbLayout
-                MagazineThumb thumb = new MagazineThumb(this, mag);
+                // Starting the ThumbLayout
+                MagazineThumb thumb = new MagazineThumb(this, magazine, thumbnailDownloaderHandler);
+                thumb.setId(i + i);
                 thumb.init(this, null);
-                if (this.magazineExists(mag.getName())) {
+                thumbnailIds.add(thumb.getId());
+
+                if (this.magazineExists(magazine.getName())) {
                     thumb.enableReadArchiveActions();
                 } else if (STANDALONE_MODE) {
                     thumb.enableReadButton();
                 }
 
-                //Add layout
+                // Add layout
                 flowLayout.addView(thumb);
             }
 
+            // Start downloading the thumbnails.
+            this.downloadNextThumbnail();
             isLoading = false;
         } catch (Exception e) {
             Log.e(this.getClass().getName(), "Error loading the shelf elements.", e);
@@ -881,7 +915,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     }
 
     private boolean magazineExists(final String name) {
-        boolean result = false;
+        boolean result;
 
         File magazineDir = new File(Configuration.getMagazinesDirectory(this) + File.separator + name);
         result = magazineDir.exists() && magazineDir.isDirectory();
@@ -895,7 +929,7 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
     }
 
     private boolean magazineZipExists(final String name) {
-        boolean result = false;
+        boolean result;
 
         File magazine = new File(Configuration.getMagazinesDirectory(this) + File.separator + name);
         result = magazine.exists() && !magazine.isDirectory();
@@ -957,6 +991,8 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
         switch (taskId) {
             //The download of the shelf file has concluded
             case DOWNLOAD_SHELF_FILE:
+                Log.d(this.getClass().getName(), "Shelf downloader finished.");
+                shelfDownloader = null;
                 //Get the results of the download
                 String taskStatus = results[0];
                 String filePath = results[1];
@@ -972,9 +1008,6 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
                 } else {
                     Log.d(this.getClass().toString(), "The shelf download failed, we will try to use a backup file.");
                     this.useBackupShelf();
-//                    Toast.makeText(this, this.getString(R.string.could_not_download_shelf),
-//                            Toast.LENGTH_LONG).show();
-//                    this.finish();
                 }
                 break;
             case REGISTRATION_TASK:
@@ -1108,6 +1141,23 @@ public class GindActivity extends Activity implements GindMandator, IDownloaderC
             downloaderStub.disconnect(this);
         }
         super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(this.getClass().getName(), "onDestroy method invoked!");
+        if (shelfDownloader != null && shelfDownloader.isDownloading()) {
+            Log.d(this.getClass().getName(), "Shelf downloader is running, cancelling...");
+            shelfDownloader.cancelDownload();
+        }
+        if (bookJsonParserTask != null && bookJsonParserTask.getStatus() != AsyncTask.Status.RUNNING) {
+            Log.d(this.getClass().getName(), "BookJson parser is running, cancelling...");
+            bookJsonParserTask.cancel(true);
+        }
+        shelfDownloader = null;
+        bookJsonParserTask = null;
+        thumbnailDownloaderHandler = null;
+        super.onDestroy();
     }
 
     @Override

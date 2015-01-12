@@ -32,9 +32,11 @@ import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -62,6 +64,7 @@ import com.baker.abaker.workers.UnzipperTask;
 import org.json.JSONException;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 
 
@@ -109,8 +112,8 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
      */
     private boolean readable = false;
 
-    private final int THUMB_DOWNLOAD_TASK = 0;
     private final int THUMB_DOWNLOAD_VISIBILITY = DownloadManager.Request.VISIBILITY_HIDDEN;
+    public final int THUMB_DOWNLOAD_TASK = 0;
     private final int MAGAZINE_DOWNLOAD_TASK = 1;
     private final int MAGAZINE_DOWNLOAD_VISIBILITY = DownloadManager.Request.VISIBILITY_VISIBLE;
     private final int UNZIP_MAGAZINE_TASK = 2;
@@ -127,16 +130,18 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     private Activity activity;
 
     /**
-     * Set to true when the user uses the Preview button rather than downloding the package.
+     * Set to true when the user uses the Preview button rather than downloading the package.
      */
     private boolean previewLoaded = false;
+
+    private Handler thumbnailDownloaderHandler;
 
     /**
      * Creates an instance of MagazineThumb to with an activity activity.
      *
      * @param _activity the parent Activity.
      */
-    public MagazineThumb(Activity _activity, Magazine mag) {
+    public MagazineThumb(Activity _activity, Magazine mag, Handler thumbnailDownloaderHandler) {
         super(_activity);
 
         this.activity = _activity;
@@ -147,6 +152,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
 
         //Set the magazine model to the thumb instance.
         this.magazine = mag;
+
+        // Handler to report to after the download of the thumbnail finishes.
+        this.thumbnailDownloaderHandler = thumbnailDownloaderHandler;
 
         //Thumbnail downloader task initialization.
         thumbDownloader = new DownloaderTask(_activity,
@@ -196,10 +204,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
         // Download the cover if not exists.
         if (!(new File(Configuration.getCacheDirectory(this.getContext())
                 + File.separator + this.magazine.getName())).exists()) {
-            thumbDownloader.execute();
+            //thumbDownloader.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
         } else {
-            this.renderCover(Configuration.getCacheDirectory(
-                    this.getContext()) + File.separator + this.magazine.getName());
+            this.renderCover();
         }
 
         //Set texts and values into the layout
@@ -475,13 +482,61 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
     }
 
     /**
-     * Sets an image file as the cover of this instance of an issue.
-     *
-     * @param path the path of the file to render.
+     * Download the cover if the file does not exist.
      */
-    private void renderCover(final String path) {
-        Bitmap bmp = BitmapFactory.decodeFile(path);
-        ((ImageView) findViewById(R.id.imgCover)).setImageBitmap(bmp);
+    public void downloadCover() {
+        String coverFile = Configuration.getCacheDirectory(this.getContext())
+                .concat(File.separator)
+                .concat(this.magazine.getName());
+        boolean coverExists = (new File(coverFile).exists());
+        if (!coverExists && !this.magazine.isStandalone()) {
+            Log.d(this.getClass().getName(), "Will download cover for thumb " + this.getId());
+            thumbDownloader.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+        } else {
+            Log.d(this.getClass().getName(), "Cover for thumb " + this.getId() + " exists. Will not download.");
+            this.renderCover();
+            // We still need to report to the handler in case there are repeated covers that should be rendered.
+            this.thumbnailDownloaderHandler.sendEmptyMessage(1);
+        }
+    }
+
+    /**
+     * Sets an image file as the cover of this instance of an issue.
+     */
+    private void renderCover() {
+        String path;
+        Bitmap bmp;
+        Log.d(this.getClass().getName(), "Will render cover for magazine " + this.magazine.getName());
+        try {
+            if (this.magazine.isStandalone()) {
+                boolean fromAssets = !(this.getContext().getResources().getBoolean(R.bool.sa_read_from_custom_directory));
+                if (fromAssets) {
+                    String books = this.getContext().getString(R.string.sa_books_directory);
+                    path =  books
+                            .concat(File.separator)
+                            .concat(this.magazine.getName())
+                            .concat(File.separator)
+                            .concat(this.magazine.getCover());
+                    AssetManager assetManager = this.getContext().getAssets();
+                    bmp = BitmapFactory.decodeStream(assetManager.open(path));
+                } else {
+                    path = Configuration.getMagazinesDirectory(this.getContext())
+                            .concat(File.separator)
+                            .concat(this.magazine.getName())
+                            .concat(File.separator)
+                            .concat(this.magazine.getCover());
+                    bmp = BitmapFactory.decodeFile(path);
+                }
+            } else {
+                path = Configuration.getCacheDirectory(this.getContext())
+                        .concat(File.separator)
+                        .concat(this.magazine.getName());
+                bmp = BitmapFactory.decodeFile(path);
+            }
+            ((ImageView) findViewById(R.id.imgCover)).setImageBitmap(bmp);
+        } catch (IOException ex) {
+            Log.e(this.getClass().getName(), "Could not render cover for " + this.magazine.getName(), ex);
+        }
     }
 
     private void resetUI() {
@@ -576,8 +631,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
             case THUMB_DOWNLOAD_TASK:
                 //If the thumbnail download ended successfully we will render the cover.
                 if (results[0].equals("SUCCESS")) {
-                    this.renderCover(Configuration.getCacheDirectory(
-                            this.getContext()) + File.separator + this.magazine.getName());
+                    Log.d(this.getClass().getName(), "Cover download for " + this.magazine.getName() + " finished.");
+                    this.renderCover();
+                    thumbnailDownloaderHandler.sendEmptyMessage(1);
                 }
                 break;
             case UNZIP_MAGAZINE_TASK:

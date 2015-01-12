@@ -88,7 +88,6 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
                     Log.e(this.getClass().toString(), "The response is NULL when obtaining the book.json.");
                 }
             } else if ("STANDALONE".equals(params[0])) {
-                Log.d(this.getClass().getName(), "Will parse the BookJson from the assets directory." );
 
                 AssetManager assetManager = this.context.getAssets();
 
@@ -98,11 +97,13 @@ public class BookJsonParserTask extends AsyncTask<String, Long, BookJson> {
                         .concat("book.json");
                 BufferedReader reader;
                 if (this.isFromAssets()) {
+                    Log.d(this.getClass().getName(), "Will parse the BookJson from the assets directory." );
                     books = this.context.getString(R.string.sa_books_directory);
                     bookJsonPath = books.concat(File.separator).concat(bookJsonPath);
                     reader = new BufferedReader(
                             new InputStreamReader(assetManager.open(bookJsonPath)));
                 } else {
+                    Log.d(this.getClass().getName(), "Will parse the BookJson from the magazines directory." );
                     books = Configuration.getMagazinesDirectory(this.context);
                     bookJsonPath = books.concat(File.separator).concat(bookJsonPath);
                     reader = new BufferedReader(

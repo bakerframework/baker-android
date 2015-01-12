@@ -60,20 +60,6 @@ public class BookJson {
 
 	private boolean zoomable;
 
-	private String background;
-
-	private boolean verticalBounce;
-
-	private int indexHeight;
-
-	private boolean mediaDisplay;
-
-	private String pageNumberColors;
-
-	private String rendering;
-
-	private boolean pageTurnTap;
-
     /**
      * We set it empty by default (not null), because we will use it anyways.
      */
@@ -92,13 +78,6 @@ public class BookJson {
 		this.cover = "";
 		this.orientation = "";
 		this.zoomable = false;
-		this.background = "";
-		this.verticalBounce = false;
-		this.indexHeight = 0;
-		this.mediaDisplay = false;
-		this.pageNumberColors = "";
-		this.rendering = "";
-		this.pageTurnTap = false;
 	}
 
 	public String getHpub() {
@@ -155,62 +134,6 @@ public class BookJson {
 
 	public void setZoomable(boolean zoomable) {
 		this.zoomable = zoomable;
-	}
-
-	public String getBackground() {
-		return background;
-	}
-
-	public void setBackground(String background) {
-		this.background = background;
-	}
-
-	public boolean isVerticalBounce() {
-		return verticalBounce;
-	}
-
-	public void setVerticalBounce(boolean verticalBounce) {
-		this.verticalBounce = verticalBounce;
-	}
-
-	public int getIndexHeight() {
-		return indexHeight;
-	}
-
-	public void setIndexHeight(int indexHeight) {
-		this.indexHeight = indexHeight;
-	}
-
-	public boolean isMediaDisplay() {
-		return mediaDisplay;
-	}
-
-	public void setMediaDisplay(boolean mediaDisplay) {
-		this.mediaDisplay = mediaDisplay;
-	}
-
-	public String getPageNumberColors() {
-		return pageNumberColors;
-	}
-
-	public void setPageNumberColors(String pageNumberColors) {
-		this.pageNumberColors = pageNumberColors;
-	}
-
-	public String getRendering() {
-		return rendering;
-	}
-
-	public void setRendering(String rendering) {
-		this.rendering = rendering;
-	}
-
-	public boolean isPageTurnTap() {
-		return pageTurnTap;
-	}
-
-	public void setPageTurnTap(boolean pageTurnTap) {
-		this.pageTurnTap = pageTurnTap;
 	}
 
 	public List<String> getAuthors() {
@@ -271,13 +194,6 @@ public class BookJson {
 		this.cover = json.optString("cover", "");
         this.orientation = json.optString("orientation", "PORTRAIT");
 //		this.zoomable = json.getBoolean("zoomable");
-//		this.background = json.getString("-baker-background");
-//		this.verticalBounce = json.getBoolean("-baker-vertical-bounce");
-//		this.indexHeight = json.getInt("-baker-index-height");
-//		this.mediaDisplay = json.getBoolean("-baker-media-autoplay");
-//		this.pageNumberColors = json.getString("-baker-page-numbers-color");
-//		this.rendering = json.getString("-baker-rendering");
-//		this.pageTurnTap = json.getBoolean("-baker-page-turn-tap");
 
 //		JSONArray authors = new JSONArray(json.getString("author"));
 //		JSONArray creators = new JSONArray(json.getString("creator"));
@@ -311,13 +227,6 @@ public class BookJson {
 		result.put("cover", this.cover);
 		result.put("orientation", this.orientation);
 		result.put("zoomable", this.zoomable);
-		result.put("-baker-background", this.background);
-		result.put("-baker-vertical-bounce", this.verticalBounce);
-		result.put("-baker-index-height", this.indexHeight);
-		result.put("-baker-media-autoplay", this.mediaDisplay);
-		result.put("-baker-page-numbers-color", this.pageNumberColors);
-		result.put("-baker-rendering", this.rendering);
-		result.put("-baker-page-turn-tap", this.pageTurnTap);
         result.put("liveUrl", this.liveUrl);
 		
 		JSONArray authors = new JSONArray();

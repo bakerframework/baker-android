@@ -36,6 +36,7 @@ public class CheckInternetTask extends AsyncTask<String, Long, String> {
 
     @Override
     protected String doInBackground(String... strings) {
+        Log.d(this.getClass().getName(), "Starting process to check for an internet connection.");
         String result;
         if (this.hasInternetConnection()) {
             result = "TRUE";
