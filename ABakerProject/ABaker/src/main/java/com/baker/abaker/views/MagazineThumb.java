@@ -201,11 +201,9 @@ public class MagazineThumb extends LinearLayout implements GindMandator {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.magazine_thumb_options, this, true);
 
-        // Download the cover if not exists.
-        if (!(new File(Configuration.getCacheDirectory(this.getContext())
+        // Load the cover if the file exists.
+        if ((new File(Configuration.getCacheDirectory(this.getContext())
                 + File.separator + this.magazine.getName())).exists()) {
-            //thumbDownloader.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
-        } else {
             this.renderCover();
         }
 
